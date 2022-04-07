@@ -1,21 +1,49 @@
+from typing import *
 import pygame
+import time
+import systems
 
 
 class Game:
     def __init__(self):
         pygame.init()
+        self.renderer: systems.RenderingSystem | None = None
+        self.world: systems.WorldSystem | None = None
+        self.on_start_funcs = []
+        self.delta_time = 1 / 60  # assume some start time
+
+    def initialize_game(self):
+        self.renderer = systems.RenderingSystem()
+        self.world = systems.WorldSystem()
+
+    def on_start(self, func: Callable):
+        self.on_start_funcs.append(func)
 
     def start(self):
         pygame.display.set_caption("Kelvin 452")
         screen = pygame.display.set_mode((1280, 720))
 
-        # define a variable to control the main loop
-        running = True
+        for start_func in self.on_start_funcs:
+            start_func()
 
-        # main loop
+        running = True
         while running:
+            start_time = time.time_ns()
+
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     running = False
-            screen.fill((220, 25, 42))
-            pygame.display.flip()
+
+            self.renderer.render(screen)
+            self.world.tick()
+
+            self.delta_time = (time.time_ns() - start_time) / 1_000_000_000
+            ms_elapsed = self.delta_time * 1000
+            print(f"frame ms: {ms_elapsed :.2f}ms ({1000 / ms_elapsed:.1f} FPS)")
+
+    @property
+    def viewport(self):
+        return pygame.display.get_window_size()
+
+
+game = Game()
