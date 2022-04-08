@@ -1,14 +1,14 @@
 from typing import *
 import pygame
 import time
-import systems
+import kelvin452.systems as systems
 
 
 class Game:
     def __init__(self):
         pygame.init()
-        self.renderer: systems.RenderingSystem | None = None
-        self.world: systems.WorldSystem | None = None
+        self.renderer: Optional[systems.RenderingSystem] = None
+        self.world: Optional[systems.WorldSystem] = None
         self.on_start_funcs = []
         self.delta_time = 1 / 60  # assume some start time
 

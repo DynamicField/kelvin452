@@ -1,9 +1,10 @@
 import os
+import pygame
 from functools import cached_property
 
-import pygame
-
-assets_location = os.path.join(os.path.dirname(os.path.realpath(__file__)), "assets")
+assets_location = os.path.realpath(
+    os.path.join(os.path.dirname(__file__), "../../assets")
+)
 
 
 class AssetLibrary:

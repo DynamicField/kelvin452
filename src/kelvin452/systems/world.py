@@ -1,6 +1,6 @@
 import pygame
 from typing import *
-from game import game
+from kelvin452.game import game
 
 
 class WorldSystem:

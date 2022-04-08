@@ -1,7 +1,9 @@
-from systems.rendering import make_sprite
-from systems.world import Entity
-from game import game
-from assets import all_assets
+import pygame.transform
+
+from kelvin452.systems.rendering import make_sprite
+from kelvin452.systems.world import Entity
+from kelvin452.game import game
+from kelvin452.assets import all_assets
 import random
 
 
@@ -10,14 +12,15 @@ class FireEntity(Entity):
         super().__init__()
         self.__x = x
         self.__y = y
-        self.__sprite = make_sprite(all_assets.fire_sprite, (x, y))
+        huge_fire_sprite = pygame.transform.scale(all_assets.fire_sprite, (220, 180))
+        self.__sprite = make_sprite(huge_fire_sprite, (x, y))
 
     def _spawned(self):
         self.show_sprite(self.__sprite)
 
     def _tick(self):
-        self.__x += 454.5 * game.delta_time
-        self.__y += 40.0 * game.delta_time
+        self.__x += 500 * game.delta_time
+        self.__y += 50 * game.delta_time
         if self.__x > game.viewport[0]:
             self.__x = 0
         if self.__y > game.viewport[1]:
@@ -32,11 +35,10 @@ def game_start():
         game.world.spawn_entity(fire_entity)
 
 
-def main():
+def launch_game():
     game.initialize_game()
     game.on_start(game_start)
     game.start()
 
-
 if __name__ == "__main__":
-    main()
+    launch_game()
