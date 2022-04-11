@@ -1,6 +1,7 @@
 import subprocess
 import venv
 import sys
+from common.activate_this import activate
 from common.paths import *
 
 
@@ -14,10 +15,9 @@ def setup_venv(force=False):
         print("Virtual environment already exists.")
 
     print("Installing pip dependencies...")
-    with open(venv_activate_script) as f:
-        exec(f.read(), {'__file__': venv_folder / "scripts" / "activate_this.py"})
+    # activate()
 
-    subprocess.run(["pip", "install", "-r", requirements], shell=True)
+    subprocess.run([str(venv_scripts_folder / "pip"), "install", "-r", str(requirements)])
 
 
 if __name__ == '__main__':
