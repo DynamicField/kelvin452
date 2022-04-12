@@ -25,7 +25,7 @@ class FireEntity(Entity):
             self.__x = 0
         if self.__y > game.viewport[1]:
             self.__y = 0
-        self.__sprite.rect.topleft = self.__x, self.__y
+        self.__sprite.rect.topleft = self.__x, self.__y # type: ignore
         self.__sprite.dirty = 1
 
 

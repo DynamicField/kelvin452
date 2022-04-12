@@ -1,5 +1,5 @@
 import pygame
-from typing import *
+from typing import List
 from kelvin452.game import game
 
 

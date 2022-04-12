@@ -16,7 +16,7 @@ class AssetLibrary:
         return pygame.image.load(os.path.join(assets_location, relative_path)).convert_alpha()
 
     @cached_property
-    def fire_sprite(self) -> pygame.Surface:
+    def fire_sprite(self) -> pygame.surface.Surface:
         return AssetLibrary.load_image("sprites/fire.png")
 
 

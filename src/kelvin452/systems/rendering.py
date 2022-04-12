@@ -1,5 +1,5 @@
 from functools import cached_property
-from typing import Tuple
+from typing import Sequence, Tuple, Any, List
 import pygame
 
 
@@ -7,10 +7,10 @@ class RenderingSystem:
     def __init__(self):
         self._sprites = pygame.sprite.LayeredDirty()
 
-    def render(self, screen: pygame.Surface):
+    def render(self, screen: pygame.surface.Surface):
         self._sprites.clear(screen, self._background)
         updated_region = self._sprites.draw(screen)
-        pygame.display.update(updated_region)
+        pygame.display.update(updated_region) # type: ignore
 
     @cached_property
     def _background(self):

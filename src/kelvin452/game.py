@@ -1,4 +1,4 @@
-from typing import *
+from typing import Callable, Any
 import pygame
 import time
 import kelvin452.systems as systems
@@ -7,8 +7,9 @@ import kelvin452.systems as systems
 class Game:
     def __init__(self):
         pygame.init()
-        self.renderer: Optional[systems.RenderingSystem] = None
-        self.world: Optional[systems.WorldSystem] = None
+        uninitialized: Any = None
+        self.renderer: systems.RenderingSystem = uninitialized
+        self.world: systems.WorldSystem = uninitialized
         self.on_start_funcs = []
         self.delta_time = 1 / 60  # assume some start time
 
