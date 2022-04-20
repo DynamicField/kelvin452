@@ -1,0 +1,5 @@
+{
+    "include": ["src"],
+    "exclude": ["venv/**", "**/__pycache__"],
+    "reportOptionalMemberAccess": "none"
+}
