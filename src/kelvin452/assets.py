@@ -19,5 +19,13 @@ class AssetLibrary:
     def fire_sprite(self) -> pygame.surface.Surface:
         return AssetLibrary.load_image("sprites/fire.png")
 
+    @cached_property
+    def p1ed_sprite(self) -> pygame.surface.Surface:
+        return AssetLibrary.load_image("sprites/p1ed.png")
+
+    @cached_property
+    def p10ed_sprite(self) -> pygame.surface.Surface:
+        return AssetLibrary.load_image("sprites/p10ed.png")
+
 
 all_assets = AssetLibrary()
