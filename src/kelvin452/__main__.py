@@ -33,7 +33,8 @@ class piece1Entity(Entity):
         super().__init__()
         self.__x = x
         self.__y = y
-        p1ed = pygame.transform.scale(all_assets.p1ed_sprite, (220, 180))
+        a = random.randint(32,64)
+        p1ed = pygame.transform.scale(all_assets.p1ed_sprite, (a,a))
         self.__sprite = make_sprite(p1ed, (x, y))
 
     def _spawned(self):
@@ -41,11 +42,8 @@ class piece1Entity(Entity):
 
     def _tick(self):
         self.__x += 500 * game.delta_time
-        self.__y += 50 * game.delta_time
-        if self.__x > game.viewport[0]:
-            self.__x = 0
-        if self.__y > game.viewport[1]:
-            self.__y = 0
+        if self.__x > game.viewport[0]-300:
+            self.__x = game.viewport[0]-300
         self.__sprite.rect.topleft = self.__x, self.__y # type: ignore
         self.__sprite.dirty = 1
 
@@ -54,7 +52,8 @@ class piece10Entity(Entity):
         super().__init__()
         self.__x = x
         self.__y = y
-        p10ed = pygame.transform.scale(all_assets.p10ed_sprite, (220, 180))
+        a = random.randint(32, 64)
+        p10ed = pygame.transform.scale(all_assets.p10ed_sprite, (a,a))
         self.__sprite = make_sprite(p10ed, (x, y))
 
     def _spawned(self):
@@ -62,11 +61,8 @@ class piece10Entity(Entity):
 
     def _tick(self):
         self.__x += 500 * game.delta_time
-        self.__y += 50 * game.delta_time
         if self.__x > game.viewport[0]:
             self.__x = 0
-        if self.__y > game.viewport[1]:
-            self.__y = 0
         self.__sprite.rect.topleft = self.__x, self.__y # type: ignore
         self.__sprite.dirty = 1
 
@@ -76,12 +72,10 @@ class piece10Entity(Entity):
         game.world.spawn_entity(fire_entity)"""
 
 def game_start():
-    for i in range(50):
-        p1ed_entity = piece1Entity(random.randint(0, 1280), random.randint(0, 720))
+    for i in range(58):
+        p1ed_entity = piece1Entity(0, random.choice([50,160,270,400,550]))
         game.world.spawn_entity(p1ed_entity)
-    for i in range(50):
-        p10ed_entity = piece10Entity(random.randint(0, 1280), random.randint(0, 720))
-        game.world.spawn_entity(p10ed_entity)
+
 
 
 def launch_game():

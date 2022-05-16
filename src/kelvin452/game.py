@@ -64,7 +64,7 @@ class Game:
 
             # Écrire les FPS dans la console
             ms_elapsed = self.delta_time * 1000
-            print(f"frame ms: {ms_elapsed :.2f}ms ({1000 / ms_elapsed:.1f} FPS)")
+            #print(f"frame ms: {ms_elapsed :.2f}ms ({1000 / ms_elapsed:.1f} FPS)")
 
     @property
     def viewport(self):
