@@ -59,11 +59,11 @@ class Game:
             self.renderer.render(screen) # Faire le rendu des sprites.
             
             # On utilise une horloge avec un max de 60 fps
-            clock.tick(60)
+            clock.tick(1000)
             self.delta_time = clock.get_time() / 1000  # Secondes écoulées
 
             # Écrire les FPS dans la console
-            print(f"clock time: {clock.get_time() :.2f}ms ({clock.get_fps()} FPS)")
+            print(f"clock time: {clock.get_time() :.2f}ms ({int(clock.get_fps())} FPS)")
 
     @property
     def viewport(self):

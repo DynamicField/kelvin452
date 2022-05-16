@@ -72,7 +72,7 @@ class piece10Entity(Entity):
         game.world.spawn_entity(fire_entity)"""
 
 def game_start():
-    for i in range(58):
+    for i in range(1):
         p1ed_entity = piece1Entity(0, random.choice([50,160,270,400,550]))
         game.world.spawn_entity(p1ed_entity)
 
