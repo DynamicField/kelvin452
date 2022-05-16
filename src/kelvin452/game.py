@@ -48,10 +48,9 @@ class Game:
             start_func()
 
         # Boucle du jeu
+        clock = pygame.time.Clock()
         running = True
         while running:
-            start_time = time.time_ns()
-
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     running = False
@@ -59,12 +58,12 @@ class Game:
             self.world.tick() # Lancer le tick des entités
             self.renderer.render(screen) # Faire le rendu des sprites.
             
-            # Met à jour le delta time (conversion de nanosecondes en secondes)
-            self.delta_time = (time.time_ns() - start_time) / 1_000_000_000
+            # On utilise une horloge avec un max de 60 fps
+            clock.tick(60)
+            self.delta_time = clock.get_time() / 1000  # Secondes écoulées
 
             # Écrire les FPS dans la console
-            ms_elapsed = self.delta_time * 1000
-            #print(f"frame ms: {ms_elapsed :.2f}ms ({1000 / ms_elapsed:.1f} FPS)")
+            print(f"clock time: {clock.get_time() :.2f}ms ({clock.get_fps()} FPS)")
 
     @property
     def viewport(self):
