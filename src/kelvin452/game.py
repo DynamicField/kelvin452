@@ -27,20 +27,18 @@ class Game:
         for start_func in self.on_start_funcs:
             start_func()
 
+        clock = pygame.time.Clock()
         running = True
         while running:
-            start_time = time.time_ns()
-
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     running = False
 
             self.renderer.render(screen)
             self.world.tick()
-
-            self.delta_time = (time.time_ns() - start_time) / 1_000_000_000
-            ms_elapsed = self.delta_time * 1000
-            print(f"frame ms: {ms_elapsed :.2f}ms ({1000 / ms_elapsed:.1f} FPS)")
+            clock.tick(60)
+            self.delta_time = clock.get_time() / 1000
+            print(f"clock time: {clock.get_time() :.2f}ms ({clock.get_fps()} FPS)")
 
     @property
     def viewport(self):
