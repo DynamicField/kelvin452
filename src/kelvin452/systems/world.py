@@ -24,7 +24,7 @@ class WorldSystem:
 
 class Entity:
     def __init__(self):
-        self.__sprites = []
+        self.__sprites: List[pygame.sprite.Sprite] = []
         self._is_destroyed = False
 
     def _spawned(self):
