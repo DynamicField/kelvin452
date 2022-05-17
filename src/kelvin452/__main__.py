@@ -28,8 +28,8 @@ class FireEntity(Entity):
         self.__sprite.rect.topleft = self.__x, self.__y # type: ignore
         self.__sprite.dirty = 1
 
-class piece1Entity(Entity):
-    def __init__(self, x, y):
+class Piece1Entity(Entity):
+    def __init__(self, x, y,compteur=10):
         super().__init__()
         self.__x = x
         self.__y = y
@@ -46,8 +46,16 @@ class piece1Entity(Entity):
             self.__x = game.viewport[0]-300
         self.__sprite.rect.topleft = self.__x, self.__y # type: ignore
         self.__sprite.dirty = 1
+        #compteur A FINIR
+        """self.compteur = 10
+        while self.compteur > 0:
+            self.compteur -= game.delta_time
+            if self.compteur == 0:
+                print(self.compteur())
+                p1ed_entity = Piece1Entity(0, 50)
+                game.world.spawn_entity(p1ed_entity)"""
 
-class piece10Entity(Entity):
+"""class Piece10Entity(Entity):
     def __init__(self, x, y):
         super().__init__()
         self.__x = x
@@ -64,16 +72,17 @@ class piece10Entity(Entity):
         if self.__x > game.viewport[0]:
             self.__x = 0
         self.__sprite.rect.topleft = self.__x, self.__y # type: ignore
-        self.__sprite.dirty = 1
+        self.__sprite.dirty = 1"""
 
 """def game_start():
     for i in range(100):
         fire_entity = FireEntity(random.randint(0, 1280), random.randint(0, 720))
         game.world.spawn_entity(fire_entity)"""
 
+
 def game_start():
-    for i in range(1):
-        p1ed_entity = piece1Entity(0, random.choice([50,160,270,400,550]))
+    for i in range(10):
+        p1ed_entity = Piece1Entity(0, 50)
         game.world.spawn_entity(p1ed_entity)
 
 
