@@ -67,12 +67,12 @@ class Game:
 
     @property
     def viewport(self):
-        """Retourne un tuple avec les dimensions de la fenêtre.
+        """Retourne un vecteur 2D avec les dimensions de la fenêtre.
 
         Returns:
             (int, int): Les dimensions de la fenêtre en pixels, largeur x hauteur
         """
-        return pygame.display.get_window_size()
+        return pygame.math.Vector2(pygame.display.get_window_size())
 
 
 game = Game()

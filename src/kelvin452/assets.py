@@ -15,9 +15,12 @@ class AssetLibrary:
     def load_image(relative_path: str):
         return pygame.image.load(os.path.join(assets_location, relative_path)).convert_alpha()
 
-    @cached_property
-    def fire_sprite(self) -> pygame.surface.Surface:
-        return AssetLibrary.load_image("sprites/fire.png")
+    def sprite(self, path: str):
+        path = "sprites/" + path
+        if path not in self.assets:
+            self.assets[path] = AssetLibrary.load_image(path)
+
+        return self.assets[path]
 
 
 all_assets = AssetLibrary()

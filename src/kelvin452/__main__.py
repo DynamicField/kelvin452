@@ -12,7 +12,7 @@ class FireEntity(Entity):
         super().__init__()
         self.__x = x
         self.__y = y
-        huge_fire_sprite = pygame.transform.scale(all_assets.fire_sprite, (220, 180))
+        huge_fire_sprite = pygame.transform.scale(all_assets.sprite("fire.png"), (220, 180))
         self.__sprite = make_sprite(huge_fire_sprite, (x, y))
 
     def _spawned(self):
