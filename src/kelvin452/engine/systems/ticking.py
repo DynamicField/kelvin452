@@ -7,10 +7,13 @@ from kelvin452.engine.systems.base import System, Component
 
 class TickOrder(Enum):
     ENTITY = auto()
+    COLLIDE = auto()
     POST_RENDER = auto()
 
 
 class TickEntry(Component):
+    __slots__ = ("order", "function", "removal_pending")
+
     def __init__(self, order: TickOrder, function: Callable):
         super().__init__()
         self.order = order

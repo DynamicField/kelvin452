@@ -20,6 +20,12 @@ class HasLifetime:
     def components(self) -> Iterable['Component']:
         return self.__components
 
+    def _component_attached(self, component: 'Component'):
+        pass
+
+    def _component_detached(self, component: 'Component'):
+        pass
+
     C = TypeVar('C', bound='Component')
 
     def get_component(self, comp_type: Type[C]) -> Optional[C]:
@@ -30,28 +36,44 @@ class HasLifetime:
 
     def attach_component(self, component: C) -> C:
         assert self.is_alive, "The entity/system must be alive."
+        assert not component.is_destroyed, "The component must be alive."
         if component not in self.__components:
             self.__components.add(component)
             component.destroyed_notifiers.append(lambda: self.__on_component_destroyed(component))
+            component.report_attachment(self)
+            self._component_attached(component)
         return component
 
     def __on_component_destroyed(self, component: 'Component'):
         if self.is_alive:
             self.__components.remove(component)
+            self._component_detached(component)
 
 
-class Component:
+class Component(HasLifetime):
+    __slots__ = ("destroyed_notifiers")
+
     def __init__(self):
-        self.__is_destroyed = False
+        super().__init__()
         self.destroyed_notifiers: List[Optional[Callable]] = []
+
+    @property
+    def is_destroyed(self):
+        return not self.is_alive
 
     def _destroyed(self):
         pass
 
     def destroy(self):
-        if not self.__is_destroyed:
-            self.__is_destroyed = True
+        if not self.is_destroyed:
+            self._report_destroyed()
             self._destroyed()
+
+    def _attached(self, attached_to):
+        pass
+
+    def report_attachment(self, target: HasLifetime):
+        self._attached(target)
 
     def attach_to(self, target: HasLifetime):
         target.attach_component(self)

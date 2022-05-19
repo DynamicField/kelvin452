@@ -7,7 +7,7 @@ from kelvin452.engine.game import game
 import inspect
 import collections
 
-from kelvin452.engine.systems.base import System, HasLifetime
+from kelvin452.engine.systems.base import System, HasLifetime, Component
 from kelvin452.engine.systems.ticking import TickOrder, TickEntry
 
 
@@ -49,11 +49,14 @@ class WorldSystem(System):
 
 
 class Entity(HasLifetime):
+    next_id = 0
+
     def __init__(self):
-        self.__sprites: List[pygame.sprite.Sprite] = []
         self._is_destroyed = False
         self.__tick_function: Optional[TickEntry] = None
         self.__position = Vector2(0, 0)
+        self.id = Entity.next_id
+        Entity.next_id += 1
         super().__init__()
 
     def _spawned(self):
@@ -65,20 +68,57 @@ class Entity(HasLifetime):
     def _tick(self):
         pass
 
+    @property
+    def position(self):
+        return self.__position
 
+    @position.setter
+    def position(self, new_pos: Vector2):
+        self.__position = new_pos
 
     def notify_spawned(self):
-        game.ticking.add_tick_function(lambda: self._tick(), TickOrder.ENTITY).attach_to(self)
+        def run_tick():
+            self._tick()
+            for component in self.components:
+                if isinstance(component, EntityComponent):
+                    component.notify_entity_tick(self)
+
+        game.ticking.add_tick_function(run_tick, TickOrder.ENTITY).attach_to(self)
         self._spawned()
 
     def notify_destroyed(self):
         self._report_destroyed()
-        for sprite in self.__sprites:
-            sprite.kill()
         if self.__tick_function is not None:
             self.__tick_function.remove()
         self._destroyed()
 
+    def destroy(self):
+        if not self._is_destroyed:
+            game.world.destroy_entity(self)
+
     def show_sprite(self, sprite: pygame.sprite.DirtySprite):
         game.renderer.add_sprite(sprite)
-        self.__sprites.append(sprite)
+
+    def __repr__(self):
+        return f"{type(self).__name__}{self.id}"
+
+
+class EntityComponent(Component):
+    def __init__(self):
+        super().__init__()
+        self.attached_entity: Entity = cast(Any, None)
+
+    def _entity_tick(self, entity: Entity):
+        pass
+
+    def notify_entity_tick(self, entity: Entity):
+        if not self.is_destroyed:
+            self._entity_tick(entity)
+
+    def _attached(self, attached_to: Entity):
+        pass
+
+    def report_attachment(self, target: HasLifetime):
+        assert isinstance(target, Entity), f"Can't attach a component of type {type(self)} to a non-entity."
+        self.attached_entity = target
+        super().report_attachment(target)

@@ -1,44 +1,40 @@
 import pygame.transform
 
-from kelvin452.engine.systems.rendering import make_sprite
-from kelvin452.engine.systems.world import Entity
-from kelvin452.engine.game import game
-from kelvin452.engine.assets import all_assets
+from kelvin452.engine import *
 import random
 
 
-class FireEntity(Entity):
-    def __init__(self, x, y):
+class FireEntity(Entity, ReactsToCollisions):
+    def __init__(self, x, y, control=False):
         super().__init__()
-        self.__x = x
-        self.__y = y
-        huge_fire_sprite = pygame.transform.scale(all_assets.sprite("fire.png"), (220, 180))
-        self.__sprite = make_sprite(huge_fire_sprite, (x, y))
+        self.control = control
+        self.position = Vector2(x, y)
+        huge_fire_sprite = pygame.transform.scale(assets.sprite("fire.png"), (220, 180))
+        self.__sprite = self.attach_component(KelvinSprite(huge_fire_sprite))
+        self.__collision = self.attach_component(CollisionHitBox(follow_sprite_rect=True, draw_box=True))
 
-    def _spawned(self):
-        self.show_sprite(self.__sprite)
+    def _on_collide(self, other: Entity):
+        print("oskour la collision vers " + str(other))
 
     def _tick(self):
-        self.__x += 500 * game.delta_time
-        self.__y += 50 * game.delta_time
-        if self.__x > game.viewport[0]:
-            self.__x = 0
-        if self.__y > game.viewport[1]:
-            self.__y = 0
-        self.__sprite.rect.topleft = self.__x, self.__y # type: ignore
-        self.__sprite.dirty = 1
+        if self.control:
+            self.position = pygame.mouse.get_pos()
+        else:
+            self.position.x = ((self.position.x + 500 * game.delta_time) % game.viewport.x)
+            self.position.y = ((self.position.y + 50 * game.delta_time) % game.viewport.y)
 
 
 def game_start():
-    for i in range(100):
-        fire_entity = FireEntity(random.randint(0, 1280), random.randint(0, 720))
-        game.world.spawn_entity(fire_entity)
+    for i in range(2):
+        game.world.spawn_entity(FireEntity(i * 10, i % 20 + i * 5))
+    game.world.spawn_entity(FireEntity(1000, 720, control=True))
 
 
 def launch_game():
     game.initialize_game()
     game.on_start(game_start)
     game.start()
+
 
 if __name__ == "__main__":
     launch_game()

@@ -6,6 +6,8 @@ from kelvin452.engine.systems.base import System
 
 
 class EventSystem(System):
+    __slots__ = ("continue_running", "__pressed_keys", "frame_events")
+
     def __init__(self):
         super().__init__()
         self.continue_running = True
