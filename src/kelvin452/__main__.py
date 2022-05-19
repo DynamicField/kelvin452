@@ -55,22 +55,41 @@ class Entity_spawn(Entity):
     def __init__(self):
         super().__init__()
         self.compteurino = 10
+        self.compteuridos = 0.4
+        self.compte2 = False
 
     def _tick(self):
-        self.compteur()
+        self.compteur(10)
+        if self.compte2 == True:
+            self.compteur2(0.4)
 
-    def compteur(self):
-        b = [50,100,150,200,250]
+    def compteur(self,temps):
+        z = 0
+        b = [120, 190, 260, 330, 400]
         self.compteurino -= game.delta_time
         if self.compteurino <= 0:
-            for i in range(10):
-                z = 0
+            self.compte2 = True
+            for i in range(5):
                 if z >= 5:
                     z = 0
                 p1ed_entity = Piece1Entity(0, b[z])
                 game.world.spawn_entity(p1ed_entity)
                 z += 1
-            self.compteurino = 10
+            self.compteurino = temps
+
+    def compteur2(self, temps):
+        z = 0
+        b = [120, 190, 260, 330, 400]
+        self.compteuridos -= game.delta_time
+        if self.compteuridos <= 0:
+            for i in range(5):
+                if z >= 5:
+                    z = 0
+                p1ed_entity = Piece1Entity(0, b[z])
+                game.world.spawn_entity(p1ed_entity)
+                z += 1
+            self.compteuridos = temps
+            self.compte2 = False
 
 class Piece10Entity(Entity):
     def __init__(self, x, y):
@@ -92,11 +111,17 @@ class Piece10Entity(Entity):
         self.__sprite.dirty = 1
 
 def game_start():
+    z = 0
+    b = [120, 190, 260, 330, 400]
     spawner = Entity_spawn()
     game.world.spawn_entity(spawner)
-    for i in range(10):
-        p1ed_entity = Piece1Entity(0, 50)
+    for i in range(5):
+        if z >= 5:
+            z = 0
+        p1ed_entity = Piece1Entity(0, b[z])
         game.world.spawn_entity(p1ed_entity)
+        z += 1
+
 
 def launch_game():
     game.initialize_game()
