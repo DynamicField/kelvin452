@@ -80,9 +80,10 @@ class Entity_spawn(Entity):
     def compteur2(self, temps):
         z = 0
         b = [120, 190, 260, 330, 400]
+        p10ed_number = random.randint(1,5)
         self.compteuridos -= game.delta_time
         if self.compteuridos <= 0:
-            for i in range(5):
+            for i in range(p10ed_number):
                 if z >= 5:
                     z = 0
                 p10ed_entity = Piece10Entity(0, b[z])
@@ -106,12 +107,19 @@ class Piece10Entity(Entity):
 
     def _tick(self):
         self.__x += 200 * game.delta_time
-        if self.__x > game.viewport[0] - 450:
-            self.__x = game.viewport[0] - 450
+        if self.__x > game.viewport[0] - 700:
+            self.__x = game.viewport[0] - 700
         self.__sprite.rect.topleft = self.__x, self.__y  # type: ignore
         self.__sprite.dirty = 1
         if self.p10ed_rect.colliderect(Rect(750, 0, 100, 700)):
             game.world.destroy_entity(self)
+
+class ProjEntity(Entity):
+    def __init__(self,x,y):
+        super().__init__()
+        self.__x = x
+        self.__y = y
+
 
 def game_start():
     z = 0
