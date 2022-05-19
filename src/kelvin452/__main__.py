@@ -44,12 +44,12 @@ class Piece1Entity(Entity):
 
     def _tick(self):
         self.__x += 200 * game.delta_time
-        if self.__x > game.viewport[0]-450:
-            self.__x = game.viewport[0]-450
+        if self.__x > 1000:
+            self.__x = 1000
         self.__sprite.rect.topleft = self.__x, self.__y # type: ignore
         self.__sprite.dirty = 1
-        if self.p1ed_rect.colliderect(Rect(750,0,100,700)):
-            game.world.destroy_entity(self)
+        """if self.p1ed_rect.colliderect(Rect(1000,0,100,900)):
+            game.world.destroy_entity(self)"""
 
 class Entity_spawn(Entity):
     def __init__(self):
