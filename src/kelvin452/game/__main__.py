@@ -56,6 +56,8 @@ class DragonEntity(Entity):
     def _tick(self):
         while self.__x > 0:
             self.__x += 10
+        self.__sprite.rect.topleft = self.__x, self.__y  # type: ignore
+        self.__sprite.dirty = 1
 
 
 def game_start():
