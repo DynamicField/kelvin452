@@ -85,8 +85,8 @@ class Entity_spawn(Entity):
             for i in range(5):
                 if z >= 5:
                     z = 0
-                p1ed_entity = Piece1Entity(0, b[z])
-                game.world.spawn_entity(p1ed_entity)
+                p10ed_entity = Piece10Entity(0, b[z])
+                game.world.spawn_entity(p10ed_entity)
                 z += 1
             self.compteuridos = temps
             self.compte2 = False
@@ -99,16 +99,19 @@ class Piece10Entity(Entity):
         a = random.randint(32, 64)
         p10ed = pygame.transform.scale(all_assets.p10ed_sprite, (a,a))
         self.__sprite = make_sprite(p10ed, (x, y))
+        self.p10ed_rect = self.__sprite.rect
 
     def _spawned(self):
         self.show_sprite(self.__sprite)
 
     def _tick(self):
-        self.__x += 500 * game.delta_time
-        if self.__x > game.viewport[0]:
-            self.__x = 0
-        self.__sprite.rect.topleft = self.__x, self.__y # type: ignore
+        self.__x += 200 * game.delta_time
+        if self.__x > game.viewport[0] - 450:
+            self.__x = game.viewport[0] - 450
+        self.__sprite.rect.topleft = self.__x, self.__y  # type: ignore
         self.__sprite.dirty = 1
+        if self.p10ed_rect.colliderect(Rect(750, 0, 100, 700)):
+            game.world.destroy_entity(self)
 
 def game_start():
     z = 0
