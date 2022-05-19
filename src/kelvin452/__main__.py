@@ -1,4 +1,5 @@
 import pygame.transform
+from pygame import Rect
 
 from kelvin452.systems.rendering import make_sprite
 from kelvin452.systems.world import Entity
@@ -33,27 +34,43 @@ class Piece1Entity(Entity):
         super().__init__()
         self.__x = x
         self.__y = y
-        self.compteur = 10
         a = random.randint(32,64)
         p1ed = pygame.transform.scale(all_assets.p1ed_sprite, (a,a))
         self.__sprite = make_sprite(p1ed, (x, y))
+        self.p1ed_rect = self.__sprite.rect
 
     def _spawned(self):
         self.show_sprite(self.__sprite)
 
     def _tick(self):
-        self.__x += 500 * game.delta_time
-        if self.__x > game.viewport[0]-300:
-            self.__x = game.viewport[0]-300
+        self.__x += 200 * game.delta_time
+        if self.__x > game.viewport[0]-450:
+            self.__x = game.viewport[0]-450
         self.__sprite.rect.topleft = self.__x, self.__y # type: ignore
         self.__sprite.dirty = 1
-        print(self.compteur)
-        #compteur A FINIR
-        self.compteur -= game.delta_time
-        if self.compteur <= 0:
-            p1ed_entity = Piece1Entity(0, 50)
-            game.world.spawn_entity(p1ed_entity)
-            self.compteur = 10
+        if self.p1ed_rect.colliderect(Rect(750,0,100,700)):
+            game.world.destroy_entity(self)
+
+class Entity_spawn(Entity):
+    def __init__(self):
+        super().__init__()
+        self.compteurino = 10
+
+    def _tick(self):
+        self.compteur()
+
+    def compteur(self):
+        b = [50,100,150,200,250]
+        self.compteurino -= game.delta_time
+        if self.compteurino <= 0:
+            for i in range(10):
+                z = 0
+                if z >= 5:
+                    z = 0
+                p1ed_entity = Piece1Entity(0, b[z])
+                game.world.spawn_entity(p1ed_entity)
+                z += 1
+            self.compteurino = 10
 
 class Piece10Entity(Entity):
     def __init__(self, x, y):
@@ -75,6 +92,8 @@ class Piece10Entity(Entity):
         self.__sprite.dirty = 1
 
 def game_start():
+    spawner = Entity_spawn()
+    game.world.spawn_entity(spawner)
     for i in range(10):
         p1ed_entity = Piece1Entity(0, 50)
         game.world.spawn_entity(p1ed_entity)
