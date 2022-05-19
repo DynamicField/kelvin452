@@ -1,9 +1,9 @@
 import pygame.transform
 
-from kelvin452.systems.rendering import make_sprite
-from kelvin452.systems.world import Entity
-from kelvin452.game import game
-from kelvin452.assets import all_assets
+from kelvin452.engine.systems.rendering import make_sprite
+from kelvin452.engine.systems.world import Entity
+from kelvin452.engine.game import game
+from kelvin452.engine.assets import all_assets
 import random
 
 

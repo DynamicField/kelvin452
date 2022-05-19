@@ -2,12 +2,15 @@ from functools import cached_property
 from typing import Tuple
 import pygame
 
+from kelvin452.engine.systems.base import System
 
-class RenderingSystem:
+
+class RenderingSystem(System):
     """
     Le moteur de rendu.
     """
     def __init__(self):
+        super().__init__()
         self._sprites = pygame.sprite.LayeredDirty()
         "Le groupe de sprites qui met à jour que ce qui est nécessaire."
 

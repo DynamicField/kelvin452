@@ -3,7 +3,7 @@ import pygame
 from functools import cached_property
 
 assets_location = os.path.realpath(
-    os.path.join(os.path.dirname(__file__), "../../assets")
+    os.path.join(os.path.dirname(__file__), "../../../assets")
 )
 
 

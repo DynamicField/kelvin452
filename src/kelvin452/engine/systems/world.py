@@ -1,12 +1,19 @@
 import pygame
 from typing import *
-from kelvin452.game import game
+
+from pygame import Vector2
+
+from kelvin452.engine.game import game
 import inspect
 import collections
 
+from kelvin452.engine.systems.base import System, HasLifetime
+from kelvin452.engine.systems.ticking import TickOrder, TickEntry
 
-class WorldSystem:
+
+class WorldSystem(System):
     def __init__(self):
+        super().__init__()
         self.entities: List[Entity] = []
         self.__entities_per_type: Dict[type, List[Entity]] = collections.defaultdict(list)
 
@@ -23,10 +30,6 @@ class WorldSystem:
         for parent_type in inspect.getmro(type(entity)):
             self.__entities_per_type[parent_type].remove(entity)
         entity.notify_destroyed()
-
-    def tick(self):
-        for entity in self.entities:
-            entity.notify_tick()
 
     T = TypeVar('T', bound='Entity')
 
@@ -45,10 +48,13 @@ class WorldSystem:
             return None
 
 
-class Entity:
+class Entity(HasLifetime):
     def __init__(self):
         self.__sprites: List[pygame.sprite.Sprite] = []
         self._is_destroyed = False
+        self.__tick_function: Optional[TickEntry] = None
+        self.__position = Vector2(0, 0)
+        super().__init__()
 
     def _spawned(self):
         pass
@@ -59,21 +65,19 @@ class Entity:
     def _tick(self):
         pass
 
+
+
     def notify_spawned(self):
+        game.ticking.add_tick_function(lambda: self._tick(), TickOrder.ENTITY).attach_to(self)
         self._spawned()
 
     def notify_destroyed(self):
-        self._is_destroyed = True
+        self._report_destroyed()
         for sprite in self.__sprites:
             sprite.kill()
+        if self.__tick_function is not None:
+            self.__tick_function.remove()
         self._destroyed()
-
-    def notify_tick(self):
-        self._tick()
-
-    @property
-    def is_destroyed(self):
-        return self._is_destroyed
 
     def show_sprite(self, sprite: pygame.sprite.DirtySprite):
         game.renderer.add_sprite(sprite)
