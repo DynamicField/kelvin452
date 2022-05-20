@@ -49,10 +49,18 @@ class WorldSystem(System):
 
 
 class Entity(HasLifetime):
+    """
+    La classe de base pour les entités. Une entité est quelque chose
+    qui existe, physiquement ou non, dans le jeu.
+
+    Elle peut être spawn en utilisant ``game.world.spawn_entity(mon_entité)``.
+    """
     next_id = 0
 
     def __init__(self):
-        self._is_destroyed = False
+        """
+        Crée une nouvelle entité
+        """
         self.__tick_function: Optional[TickEntry] = None
         self.__position = Vector2(0, 0)
         self.id = Entity.next_id
@@ -60,12 +68,23 @@ class Entity(HasLifetime):
         super().__init__()
 
     def _spawned(self):
+        """
+        Appelée quand l'entité vient d'être spawn dans le jeu.
+        """
         pass
 
     def _destroyed(self):
+        """
+        Appelée quand l'entité vient d'être détruite dans le jeu.
+        """
         pass
 
     def _tick(self):
+        """
+        Appelée à chaque frame du jeu. Il est possible d'utiliser
+        ``game.delta_time`` pour obtenir la durée de la frame précédente
+        afin d'avoir un référentiel de temps.
+        """
         pass
 
     @property
@@ -93,7 +112,7 @@ class Entity(HasLifetime):
         self._destroyed()
 
     def destroy(self):
-        if not self._is_destroyed:
+        if self.is_alive:
             game.world.destroy_entity(self)
 
     def show_sprite(self, sprite: pygame.sprite.DirtySprite):

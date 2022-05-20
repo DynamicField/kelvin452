@@ -16,27 +16,31 @@ class CollisionSystem(System):
         super().__init__()
         self.__refreshed_hit_boxes: Set['CollisionHitBox'] = set()
         self.__all_hitboxes: Set['CollisionHitBox'] = set()
-
-    def _started(self):
-        game.ticking.add_tick_function(lambda: self.__refresh_collisions(), TickOrder.COLLIDE) \
-            .attach_to(self)
+        self.__refreshing_collisions = False
+        self.__pending_removals: List['CollisionHitBox'] = []
 
     def report_hit_box_added(self, hit_box: 'CollisionHitBox'):
         self.__all_hitboxes.add(hit_box)
         self.__refreshed_hit_boxes.add(hit_box)
 
     def report_hit_box_destroyed(self, hit_box: 'CollisionHitBox'):
-        self.__all_hitboxes.remove(hit_box)
-        self.__refreshed_hit_boxes.remove(hit_box)
+        self.__pending_removals.append(hit_box)
+        if not self.__refreshing_collisions:
+            self.remove_pending_hit_boxes()
 
     def refresh_hit_box(self, hit_box: 'CollisionHitBox'):
         self.__refreshed_hit_boxes.add(hit_box)
 
-    def __refresh_collisions(self):
+    def refresh_collisions(self):
+        self.__refreshing_collisions = True
+
         # Bruteforce, faudrait optimiser ça avec des quadtrees.
         for hit_box in self.__refreshed_hit_boxes:
+            if hit_box.is_destroyed:
+                continue
+
             for other_hit_box in self.__all_hitboxes:
-                if hit_box == other_hit_box:
+                if other_hit_box.is_destroyed or hit_box == other_hit_box:
                     continue
                 if hit_box.rect.colliderect(other_hit_box.rect):
                     self.on_collide(hit_box, other_hit_box)
@@ -44,6 +48,11 @@ class CollisionSystem(System):
                     self.clear_ongoing_collisions(hit_box, other_hit_box)
 
         self.__refreshed_hit_boxes.clear()
+        # On retire toutes les hitbox après pour éviter des conflits
+        # avec les listes.
+        self.remove_pending_hit_boxes()
+
+        self.__refreshing_collisions = False
 
     @staticmethod
     def on_collide(hit_box: 'CollisionHitBox', other_hit_box: 'CollisionHitBox'):
@@ -60,6 +69,16 @@ class CollisionSystem(System):
     def clear_ongoing_collisions(hit_box: 'CollisionHitBox', other_hit_box: 'CollisionHitBox'):
         hit_box.ongoing_collisions.discard(other_hit_box)
         other_hit_box.ongoing_collisions.discard(hit_box)
+
+    def remove_pending_hit_boxes(self):
+        for hit_box in self.__pending_removals:
+            self.__all_hitboxes.discard(hit_box)
+            self.__refreshed_hit_boxes.discard(hit_box)
+            # Aussi supprimer les collisions en cours
+            for other_hit_box in list(hit_box.ongoing_collisions):
+                self.clear_ongoing_collisions(hit_box, other_hit_box)
+            print("boom!")
+        self.__pending_removals.clear()
 
 
 class CollisionHitBox(EntityComponent):
@@ -121,7 +140,7 @@ class CollisionHitBox(EntityComponent):
         game.collision.report_hit_box_added(self)
 
     def _destroyed(self):
-        game.collision.report_hit_box_removed(self)
+        game.collision.report_hit_box_destroyed(self)
 
     def draw_debug_box(self):
         # Rouge = normal

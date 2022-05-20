@@ -5,6 +5,7 @@ class HasLifetime:
     def __init__(self):
         self.__components = set()
         self.__is_alive = True
+        self.destroyed_notifiers: List[Callable] = []
         super().__init__()
 
     @property
@@ -13,6 +14,9 @@ class HasLifetime:
 
     def _report_destroyed(self):
         self.__is_alive = False
+        print("Destroying " + str(self))
+        for notifier in self.destroyed_notifiers:
+            notifier()
         for component in list(self.__components):
             component.destroy()
 
@@ -51,11 +55,9 @@ class HasLifetime:
 
 
 class Component(HasLifetime):
-    __slots__ = "destroyed_notifiers"
-
     def __init__(self):
         super().__init__()
-        self.destroyed_notifiers: List[Optional[Callable]] = []
+        self._attached_to = None
 
     @property
     def is_destroyed(self):
@@ -73,10 +75,19 @@ class Component(HasLifetime):
         pass
 
     def report_attachment(self, target: HasLifetime):
+        self._attached_to = target
         self._attached(target)
 
     def attach_to(self, target: HasLifetime):
         target.attach_component(self)
+
+    def __repr__(self):
+        def attached_suffix():
+            if self._attached_to is not None:
+                return f" attached to {self._attached_to}"
+            else:
+                return ""
+        return f"<Component {type(self).__name__}{attached_suffix()}>"
 
 
 class System(HasLifetime):
@@ -87,13 +98,16 @@ class System(HasLifetime):
         pass
 
     def start(self):
-        print(f"System {type(self)} started")
+        print(f"System {type(self).__name__} started")
         self._started()
 
     def _stopped(self):
         pass
 
     def stop(self):
-        print(f"System {type(self)} stopped")
+        print(f"System {type(self).__name__} stopped")
         self._report_destroyed()
         self._stopped()
+
+    def __repr__(self):
+        return f"<System {type(self).__name__}>"

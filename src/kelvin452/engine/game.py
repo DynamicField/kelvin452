@@ -30,8 +30,8 @@ class Game:
         self.__game_started = False
         self.on_start_funcs = []
         self.delta_time = 1 / 60  # assume some start time
-        self.time_factor = 1
         "Le temps (en secondes) passé entre la frame précédente et la frame actuelle."
+        self.time_factor = 1
         self.log_fps = "KELVIN_FPS" in os.environ
 
     def initialize_game(self):
@@ -76,7 +76,7 @@ class Game:
                 break
 
             self.ticking.run_ticks(TickOrder.ENTITY)  # Lancer le tick des entités
-            self.ticking.run_ticks(TickOrder.COLLIDE)  # Lancer le tick post-entités
+            self.collision.refresh_collisions()  # Vérifier les collisions
             self.renderer.render(screen)  # Faire le rendu des sprites.
             self.ticking.run_ticks(TickOrder.POST_RENDER)  # Lancer le tick après le rendu
 
