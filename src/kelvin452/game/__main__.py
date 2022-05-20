@@ -49,7 +49,6 @@ class Piece1Entity(Entity):
     def __init__(self, x, y):
         super().__init__()
         self.position = Vector2(x, y)
-
         a = random.randint(32, 64)
         p1ed = pygame.transform.scale(assets.sprite("p1ed.png"), (a, a))
         self.__sprite = self.attach_component(make_sprite(p1ed, (x, y)))
@@ -59,7 +58,7 @@ class Piece1Entity(Entity):
         self.position.x += 200 * game.delta_time
         if self.position.x > 1000:
             self.position.x = 1000
-        """if self.p1ed_rect.colliderect(Rect(1000,0,100,900)):
+        """if self.p1ed_rect.colliderect():
             game.world.destroy_entity(self)"""
 
 
@@ -77,11 +76,11 @@ class Entity_spawn(Entity):
 
     def compteur(self, temps):
         z = 0
-        b = [120, 190, 260, 330, 400]
+        b = [250, 340, 430]
         self.compteurino -= game.delta_time
         if self.compteurino <= 0:
             self.compte2 = True
-            for i in range(5):
+            for i in range(3):
                 if z >= 5:
                     z = 0
                 p1ed_entity = Piece1Entity(0, b[z])
@@ -91,8 +90,8 @@ class Entity_spawn(Entity):
 
     def compteur2(self, temps):
         z = 0
-        b = [120, 190, 260, 330, 400]
-        p10ed_number = random.randint(1, 5)
+        b = [250, 340, 430]
+        p10ed_number = random.randint(1, 3)
         self.compteuridos -= game.delta_time
         if self.compteuridos <= 0:
             for i in range(p10ed_number):
@@ -108,8 +107,8 @@ class Entity_spawn(Entity):
 class Piece10Entity(Entity):
     def __init__(self, x, y):
         super().__init__()
-        self.position.x = x
-        self.position.y = y
+        self.position = Vector2(x, y)
+        self.compteurProj = 2
         a = random.randint(32, 64)
         p10ed = pygame.transform.scale(assets.sprite("p10ed.png"), (a, a))
         self.__sprite = self.attach_component(make_sprite(p10ed, (x, y)))
@@ -119,13 +118,27 @@ class Piece10Entity(Entity):
         self.position.x += 200 * game.delta_time
         if self.position.x > game.viewport[0] - 700:
             self.position.x = game.viewport[0] - 700
+        self.compteurProj -= game.delta_time
+        if self.position.x >= game.viewport[0] - 690:
+            if self.compteurProj <= 0:
+                proj_entity = ProjEntity(self.position.x, self.position.y)
+                game.world.spawn_entity(proj_entity)
+        self.compteurProj = 2
 
 
 class ProjEntity(Entity):
     def __init__(self, x, y):
         super().__init__()
-        self.position.x = x
-        self.position.y = y
+        self.position = Vector2(x, y)
+        self.__launched = False
+        proj = pygame.transform.scale(assets.sprite("projectile.png"), (100,100))
+        self.__sprite = self.attach_component(make_sprite(proj, (x, y)))
+        self.proj_rect = self.__sprite.rect
+
+    def _tick(self):
+        self.position.x += 10
+        """if self.position.x > 1200:
+            game.world.destroy_entity(self)"""
 
 
 def game_start():
@@ -136,10 +149,10 @@ def game_start():
 
     # partie d'alix en dessous
     z = 0
-    b = [120, 190, 260, 330, 400]
+    b = [250, 340, 430]
     spawner = Entity_spawn()
     game.world.spawn_entity(spawner)
-    for i in range(5):
+    for i in range(3):
         if z >= 5:
             z = 0
         p1ed_entity = Piece1Entity(0, b[z])
