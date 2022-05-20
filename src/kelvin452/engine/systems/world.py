@@ -92,8 +92,8 @@ class Entity(HasLifetime):
         return self.__position
 
     @position.setter
-    def position(self, new_pos: Vector2):
-        self.__position = new_pos
+    def position(self, new_pos: Union[Vector2, Tuple[float, float]]):
+        self.__position = Vector2(new_pos)
 
     def notify_spawned(self):
         def run_tick():
