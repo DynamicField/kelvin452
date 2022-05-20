@@ -45,6 +45,7 @@ class DragonEntity(Entity):
 
 
 def game_start():
+    game.log_fps = True
     fire_entity = FireEntity(1024, 315)
     game.world.spawn_entity(fire_entity)
 
