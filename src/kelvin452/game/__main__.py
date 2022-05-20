@@ -130,7 +130,7 @@ class ProjEntity(Entity):
 
 def game_start():
     game.log_fps = True
-    game.renderer.background =
+    game.renderer.background = assets.background("background.png")
     fire_entity = FireEntity(1024, 315)
     game.world.spawn_entity(fire_entity)
 
