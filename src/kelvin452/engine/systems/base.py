@@ -51,7 +51,7 @@ class HasLifetime:
 
 
 class Component(HasLifetime):
-    __slots__ = ("destroyed_notifiers")
+    __slots__ = "destroyed_notifiers"
 
     def __init__(self):
         super().__init__()

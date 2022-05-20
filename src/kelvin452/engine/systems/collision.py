@@ -45,7 +45,8 @@ class CollisionSystem(System):
 
         self.__refreshed_hit_boxes.clear()
 
-    def on_collide(self, hit_box: 'CollisionHitBox', other_hit_box: 'CollisionHitBox'):
+    @staticmethod
+    def on_collide(hit_box: 'CollisionHitBox', other_hit_box: 'CollisionHitBox'):
         if other_hit_box in hit_box.ongoing_collisions:
             return  # On fait rien
 
@@ -66,6 +67,9 @@ class CollisionHitBox(EntityComponent):
     Une hit box de collision, qui envoie une notification lorsqu’une autre
     hit box est touchée.
     """
+
+    __slots__ = ("__follow_sprite_rect", "__rect", "__rect_set", "ongoing_collisions", "draw_box", "margin")
+
     def __init__(self, follow_sprite_rect: bool, draw_box=False, margin: Vector2 = Vector2(0, 0)):
         """
         Crée une nouvelle hit box, ne pas oublier d'attacher le composant avec
@@ -120,7 +124,10 @@ class CollisionHitBox(EntityComponent):
         game.collision.report_hit_box_removed(self)
 
     def draw_debug_box(self):
-        pygame.draw.rect(pygame.display.get_surface(), (255, 0, 0), self.rect, 2)
+        # Rouge = normal
+        # Violet = collision
+        color = (255, 0, 0) if len(self.ongoing_collisions) == 0 else (128, 0, 128)
+        pygame.draw.rect(pygame.display.get_surface(), color, self.rect, 2)
 
 
 class CollisionListener(Component):

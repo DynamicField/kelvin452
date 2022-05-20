@@ -64,6 +64,11 @@ class RenderingSystem(System):
         self._sprites.remove(sprite)
 
     def queue_rendering_action(self, action: Callable):
+        """
+        Ajouter une fonction à exécuter lors du rendu. Cette fonction sera
+        lancée uniquement sur la frame actuelle.
+        :param action: La fonction à lancer
+        """
         self.queued_rendering_actions.append(action)
 
 

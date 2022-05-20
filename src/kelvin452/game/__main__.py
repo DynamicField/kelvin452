@@ -26,7 +26,7 @@ class FireEntity(Entity, ReactsToCollisions):
 
 def game_start():
     for i in range(2):
-        game.world.spawn_entity(FireEntity(i * 10, i % 20 + i * 5))
+        game.world.spawn_entity(FireEntity(random.randint(0, 1000), random.randint(200, 750)))
     game.world.spawn_entity(FireEntity(1000, 720, control=True))
 
 
