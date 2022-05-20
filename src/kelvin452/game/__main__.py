@@ -12,6 +12,8 @@ class FireEntity(Entity):
         self.__x = x
         self.__y = y
         self.position = [x, y]
+        self.shoot_cooldown = 1
+        self.timer = 0
         huge_fire_sprite = pygame.transform.scale(all_assets.sprite("fire.png"), (90, 90))
         self.__sprite = make_sprite(huge_fire_sprite, (x, y))
 
@@ -22,9 +24,12 @@ class FireEntity(Entity):
         self.show_sprite(self.__sprite)
 
     def _tick(self):
-        if pygame.mouse.get_pressed()[0]:
-            dragon_entity = DragonEntity(self.position[0], self.position[1]+30)
-            game.world.spawn_entity(dragon_entity)
+        self.timer -= game.delta_time
+        if pygame.mouse.get_pressed()[0] or game.input.is_key_down(pygame.K_SPACE):
+            if self.timer <= 0:
+                dragon_entity = DragonEntity(self.position[0], self.position[1] + 30)
+                game.world.spawn_entity(dragon_entity)
+                self.timer = self.shoot_cooldown
 
         if game.input.is_key_down(pygame.K_DOWN):
             if self.__y + 100 <= 720:
@@ -53,8 +58,9 @@ class DragonEntity(Entity):
         self.show_sprite(self.__sprite)
 
     def _tick(self):
-        if self.__x > 0:
-            self.__x -= 10
+        self.__x -= 10
+        if self.__x < 0:
+            game.world.destroy_entity(self)
         self.__sprite.rect.topleft = self.__x, self.__y  # type: ignore
         self.__sprite.dirty = 1
 
