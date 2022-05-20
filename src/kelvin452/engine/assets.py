@@ -19,3 +19,11 @@ def sprite(path: str):
         assets[path] = load_image(path)
 
     return assets[path]
+
+
+def background(path: str):
+    path = "background/" + path
+    if path not in assets:
+        assets[path] = load_image(path)
+
+    return assets[path]
