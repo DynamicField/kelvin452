@@ -22,8 +22,8 @@ class FireEntity(Entity):
         self.show_sprite(self.__sprite)
 
     def _tick(self):
-        if game.input.is_key_down(pygame.mouse.get_pressed()[0]):
-            dragon_entity = DragonEntity(self.position[0], self.position[1])
+        if pygame.mouse.get_pressed()[0]:
+            dragon_entity = DragonEntity(self.position[0], self.position[1]+44)
             game.world.spawn_entity(dragon_entity)
 
         if game.input.is_key_down(pygame.K_DOWN):
@@ -53,8 +53,8 @@ class DragonEntity(Entity):
         self.show_sprite(self.__sprite)
 
     def _tick(self):
-        while self.__x > 0:
-            self.__x += 10
+        if self.__x > 0:
+            self.__x -= 10
         self.__sprite.rect.topleft = self.__x, self.__y  # type: ignore
         self.__sprite.dirty = 1
 
