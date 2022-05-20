@@ -1,3 +1,4 @@
+import os
 from typing import Callable, Any, Dict, Type, TypeVar
 import pygame
 import kelvin452.engine.systems as systems
@@ -23,11 +24,15 @@ class Game:
         "Le système d'event qui gère les évènements du jeu."
         self.input: systems.InputSystem = uninitialized
         "Le système d'input qui gère la souris et le clavier"
+        self.collision: systems.CollisionSystem = uninitialized
+        "Le système de collisions qui gère les collisions entre les hitboxes."
         self.__systems: Dict[type, System] = {}
         self.__game_started = False
         self.on_start_funcs = []
         self.delta_time = 1 / 60  # assume some start time
         "Le temps (en secondes) passé entre la frame précédente et la frame actuelle."
+        self.time_factor = 1
+        self.log_fps = "KELVIN_FPS" in os.environ
 
     def initialize_game(self):
         """
@@ -38,6 +43,7 @@ class Game:
         self.ticking = self.add_system(systems.TickingSystem())
         self.event = self.add_system(systems.EventSystem())
         self.input = self.add_system(systems.InputSystem())
+        self.collision = self.add_system(systems.CollisionSystem())
 
     def on_start(self, func: Callable):
         """Ajoute une fonction à lancer lorsque le jeu commence.
@@ -54,7 +60,7 @@ class Game:
         """
         pygame.display.set_caption("Kelvin 452")
         # Fênetre 1280x720
-        screen = pygame.display.set_mode((1280, 720))
+        screen = pygame.display.set_mode((1280, 720), vsync=1)
 
         self.__game_started = True
         for system in self.__systems.values():
@@ -70,15 +76,17 @@ class Game:
                 break
 
             self.ticking.run_ticks(TickOrder.ENTITY)  # Lancer le tick des entités
+            self.collision.refresh_collisions()  # Vérifier les collisions
             self.renderer.render(screen)  # Faire le rendu des sprites.
             self.ticking.run_ticks(TickOrder.POST_RENDER)  # Lancer le tick après le rendu
 
             # On utilise une horloge avec un max de 60 fps
             clock.tick(60)
-            self.delta_time = clock.get_time() / 1000  # Secondes écoulées
+            self.delta_time = clock.get_time() * self.time_factor / 1000  # Secondes écoulées
 
-            # Écrire les FPS dans la console
-            print(f"clock time: {clock.get_time() :.2f}ms ({clock.get_fps()} FPS)")
+            # Écrire les FPS dans la console QUE SI ON LE VEUT (aa le spam)
+            if self.log_fps:
+                print(f"clock time: {clock.get_time() :.2f}ms ({clock.get_fps()} FPS)")
 
         for system in self.__systems.values():
             system.stop()
@@ -96,7 +104,7 @@ class Game:
         return system
 
     @property
-    def viewport(self):
+    def viewport(self) -> pygame.math.Vector2:
         """Retourne un vecteur 2D avec les dimensions de la fenêtre.
 
         Returns:

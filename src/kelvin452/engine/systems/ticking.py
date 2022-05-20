@@ -11,6 +11,8 @@ class TickOrder(Enum):
 
 
 class TickEntry(Component):
+    __slots__ = ("order", "function", "removal_pending")
+
     def __init__(self, order: TickOrder, function: Callable):
         super().__init__()
         self.order = order
