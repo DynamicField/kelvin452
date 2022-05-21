@@ -142,7 +142,7 @@ class ProjEntity(Entity, ReactsToCollisions):
         self.__collision = self.attach_component(CollisionHitBox(follow_sprite_rect=True, draw_box=False))
 
     def _tick(self):
-        self.position.x += 10
+        self.position.x += 10 * game.delta_time
         if self.position.x > 1200:
             game.world.destroy_entity(self)
 
