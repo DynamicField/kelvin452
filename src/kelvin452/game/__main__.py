@@ -4,13 +4,13 @@ from kelvin452.engine import *
 import random
 
 
-class FireEntity(Entity,ReactsToCollisions):
+class FireEntity(Entity, ReactsToCollisions):
     def __init__(self, x, y):
         super().__init__()
         self.position = Vector2(x, y)
         self.shoot_cooldown = 1
         self.timer = 0
-        huge_fire_sprite = pygame.transform.scale(assets.sprite("fire.png"), (70, 70))
+        huge_fire_sprite = pygame.transform.scale(assets.sprite("fire.png"), (90, 90))
         self.__sprite = self.attach_component(make_sprite(huge_fire_sprite, (x, y)))
         self.__collision = self.attach_component(CollisionHitBox(follow_sprite_rect=True, draw_box=False))
 
@@ -26,14 +26,14 @@ class FireEntity(Entity,ReactsToCollisions):
                 self.timer = self.shoot_cooldown
 
         if game.input.is_key_down(pygame.K_DOWN):
-            if self.position.y + 100 <= 720:
-                self.add_y(600 * game.delta_time)
+            if self.position.y + 100 <= 600:
+                self.add_y(600*game.delta_time)
         if game.input.is_key_down(pygame.K_UP):
-            if self.position.y - 10 >= 0:
-                self.add_y(-600 * game.delta_time)
+            if self.position.y - 10 >= 100:
+                self.add_y(-600*game.delta_time)
 
 
-class DragonEntity(Entity,ReactsToCollisions):
+class DragonEntity(Entity, ReactsToCollisions):
     def __init__(self, x, y):
         super().__init__()
         self.position = Vector2(x, y)
@@ -42,7 +42,7 @@ class DragonEntity(Entity,ReactsToCollisions):
         self.__collision = self.attach_component(CollisionHitBox(follow_sprite_rect=True, draw_box=False))
 
     def _tick(self):
-        self.position.x -= 10 * game.delta_time
+        self.position.x -= 600*game.delta_time
         if self.position.x < 0:
             game.world.destroy_entity(self)
 
@@ -63,8 +63,8 @@ class Piece1Entity(Entity):
 
     def _tick(self):
         self.position.x += 200 * game.delta_time
-        if self.position.x > 1000:
-            self.position.x = 1000
+        if self.position.x > 900:
+            self.position.x = 900
 
 
 class Entity_spawn(Entity):
@@ -94,7 +94,7 @@ class Entity_spawn(Entity):
             self.compteurino = temps
 
     def compteur2(self, temps):
-        z = 1
+        z = 0
         b = [250, 340, 430]
         p10ed_number = random.randint(1, 3)
         self.compteuridos -= game.delta_time
@@ -113,7 +113,7 @@ class Piece10Entity(Entity):
     def __init__(self, x, y):
         super().__init__()
         self.position = Vector2(x, y)
-        self.compteurProj = random.choice([3,3.1,3.2,3.3,3.4,3.5,3.6,3.7,3.8,3.9,4])
+        self.compteurProj = random.uniform(4, 6)
         self.compteurProjRes = self.compteurProj
         a = random.randint(32, 64)
         p10ed = pygame.transform.scale(assets.sprite("p10ed.png"), (a, a))
@@ -126,7 +126,7 @@ class Piece10Entity(Entity):
             if self.compteurProj <= 0:
                 proj_entity = ProjEntity(self.position.x, self.position.y - random.randint(0, 50))
                 game.world.spawn_entity(proj_entity)
-                self.compteurProj = random.choice([3,3.1,3.2,3.3,3.4,3.5,3.6,3.7,3.8,3.9,4])
+                self.compteurProj = 1
         self.position.x += 200 * game.delta_time
         if self.position.x > 580:
             self.position.x = 580
@@ -137,19 +137,18 @@ class ProjEntity(Entity, ReactsToCollisions):
         super().__init__()
         self.position = Vector2(x, y)
         self.__launched = False
-        proj = pygame.transform.scale(assets.sprite("projectile.png"), (100,100))
+        proj = pygame.transform.scale(assets.sprite("projectile.png"), (100, 100))
         self.__sprite = self.attach_component(make_sprite(proj, (x, y)))
         self.__collision = self.attach_component(CollisionHitBox(follow_sprite_rect=True, draw_box=False))
 
     def _tick(self):
-        self.position.x += 10 * game.delta_time
+        self.position.x += 10
         if self.position.x > 1200:
             game.world.destroy_entity(self)
 
     def _on_collide(self, other: Entity):
         if isinstance(other, FireEntity):
             game.world.destroy_entity(self)
-
 
 
 def game_start():
@@ -175,6 +174,10 @@ def launch_game():
     game.initialize_game()
     game.on_start(game_start)
     game.start()
+
+
+def end_game():
+    game.renderer.background = assets.background("game_over.png")
 
 
 if __name__ == "__main__":
