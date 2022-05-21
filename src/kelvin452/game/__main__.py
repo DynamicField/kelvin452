@@ -180,7 +180,8 @@ def launch_game():
 
 
 def end_game():
-    game.renderer.background = assets.background("game_over.png")
+    game.time_factor = 0
+    #pygame.
 
 
 if __name__ == "__main__":
