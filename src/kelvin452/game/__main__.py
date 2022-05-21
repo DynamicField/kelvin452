@@ -25,10 +25,10 @@ class FireEntity(Entity):
 
         if game.input.is_key_down(pygame.K_DOWN):
             if self.position.y + 100 <= 720:
-                self.add_y(10)
+                self.add_y(600 * game.delta_time)
         if game.input.is_key_down(pygame.K_UP):
             if self.position.y - 10 >= 0:
-                self.add_y(-10)
+                self.add_y(-600 * game.delta_time)
 
 
 class DragonEntity(Entity):
@@ -39,7 +39,7 @@ class DragonEntity(Entity):
         self.__sprite = self.attach_component(make_sprite(huge_dragon_sprite, (x, y)))
 
     def _tick(self):
-        self.position.x -= 10
+        self.position.x -= 10 * game.delta_time
         if self.position.x < 0:
             game.world.destroy_entity(self)
 
