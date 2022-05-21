@@ -74,7 +74,6 @@ class CollisionSystem(System):
             # Aussi supprimer les collisions en cours
             for other_hit_box in list(hit_box.ongoing_collisions):
                 self.clear_ongoing_collisions(hit_box, other_hit_box)
-            print("boom!")
         self.__pending_removals.clear()
 
 
