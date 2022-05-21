@@ -181,7 +181,7 @@ def launch_game():
 
 def end_game():
     game.time_factor = 0
-    background = pygame.image.load("../assets/background/game_over.png").convert()
+    background = pygame.image.load(assets.background("game_over.png")).convert()
     game.screen.blit(background)
 
 
