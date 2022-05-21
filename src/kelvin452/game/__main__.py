@@ -115,7 +115,7 @@ class Piece10Entity(Entity):
     def __init__(self, x, y):
         super().__init__()
         self.position = Vector2(x, y)
-        self.compteurProj = random.uniform(4, 6)
+        self.compteurProj = random.uniform(3, 5)
         self.compteurProjRes = self.compteurProj
         a = random.randint(32, 64)
         p10ed = pygame.transform.scale(assets.sprite("p10ed.png"), (a, a))
@@ -128,7 +128,7 @@ class Piece10Entity(Entity):
             if self.compteurProj <= 0:
                 proj_entity = ProjEntity(self.position.x, self.position.y - random.randint(0, 50))
                 game.world.spawn_entity(proj_entity)
-                self.compteurProj = 1
+                self.compteurProj = random.choice([2.1,2.2,2.3,2.4,2.5,2.6,2.7,2.8,2.9,3])
         self.position.x += 200 * game.delta_time
         if self.position.x > 580:
             self.position.x = 580
