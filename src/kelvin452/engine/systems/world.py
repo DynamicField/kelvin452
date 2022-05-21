@@ -18,14 +18,18 @@ class WorldSystem(System):
         self.__entities_per_type: Dict[type, List[Entity]] = collections.defaultdict(list)
 
     def spawn_entity(self, entity: 'Entity'):
-        assert entity not in self.entities, "Entity already spawned"
+        if entity in self.entities:
+            return
+        
         self.entities.append(entity)
         for parent_type in inspect.getmro(type(entity)):
             self.__entities_per_type[parent_type].append(entity)
         entity.notify_spawned()
 
     def destroy_entity(self, entity: 'Entity'):
-        assert entity in self.entities, "Entity not found"
+        if entity not in self.entities:
+            return
+
         self.entities.remove(entity)
         for parent_type in inspect.getmro(type(entity)):
             self.__entities_per_type[parent_type].remove(entity)
@@ -92,8 +96,8 @@ class Entity(HasLifetime):
         return self.__position
 
     @position.setter
-    def position(self, new_pos: Vector2):
-        self.__position = new_pos
+    def position(self, new_pos: Union[Vector2, Tuple[float, float]]):
+        self.__position = Vector2(new_pos)
 
     def notify_spawned(self):
         def run_tick():
