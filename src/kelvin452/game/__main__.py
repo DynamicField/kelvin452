@@ -48,8 +48,8 @@ class DragonEntity(Entity,ReactsToCollisions):
 
     def _on_collide(self, other: Entity):
         if isinstance(other, Piece1Entity) or isinstance(other, Piece10Entity):
-            game.world.destroy_entity(self)
             game.world.destroy_entity(other)
+            game.world.destroy_entity(self)
 
 
 class Piece1Entity(Entity):
@@ -126,7 +126,7 @@ class Piece10Entity(Entity):
             if self.compteurProj <= 0:
                 proj_entity = ProjEntity(self.position.x, self.position.y)
                 game.world.spawn_entity(proj_entity)
-                self.compteurProj = 3
+                self.compteurProj = 0
         self.position.x += 200 * game.delta_time
         if self.position.x > 580:
             self.position.x = 580
