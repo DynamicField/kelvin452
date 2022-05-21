@@ -36,11 +36,8 @@ class CollisionSystem(System):
 
         # Bruteforce, faudrait optimiser ça avec des quadtrees.
         for hit_box in self.__refreshed_hit_boxes:
-            if hit_box.is_destroyed:
-                continue
-
             for other_hit_box in self.__all_hitboxes:
-                if other_hit_box.is_destroyed or hit_box == other_hit_box:
+                if hit_box.is_destroyed or other_hit_box.is_destroyed or hit_box == other_hit_box:
                     continue
                 if hit_box.rect.colliderect(other_hit_box.rect):
                     self.on_collide(hit_box, other_hit_box)
@@ -77,7 +74,6 @@ class CollisionSystem(System):
             # Aussi supprimer les collisions en cours
             for other_hit_box in list(hit_box.ongoing_collisions):
                 self.clear_ongoing_collisions(hit_box, other_hit_box)
-            print("boom!")
         self.__pending_removals.clear()
 
 
