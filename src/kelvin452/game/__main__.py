@@ -28,10 +28,10 @@ class FireEntity(Entity, ReactsToCollisions):
 
         if game.input.is_key_down(pygame.K_DOWN):
             if self.position.y + 100 <= 600:
-                self.add_y(600*game.delta_time)
+                self.add_y(600 * game.delta_time)
         if game.input.is_key_down(pygame.K_UP):
             if self.position.y - 10 >= 100:
-                self.add_y(-600*game.delta_time)
+                self.add_y(-600 * game.delta_time)
 
 
 class DragonEntity(Entity, ReactsToCollisions):
@@ -43,7 +43,7 @@ class DragonEntity(Entity, ReactsToCollisions):
         self.__collision = self.attach_component(CollisionHitBox(follow_sprite_rect=True, draw_box=False))
 
     def _tick(self):
-        self.position.x -= 600*game.delta_time
+        self.position.x -= 600 * game.delta_time
         if self.position.x < 0:
             game.world.destroy_entity(self)
 
@@ -181,7 +181,8 @@ def launch_game():
 
 def end_game():
     game.time_factor = 0
-    #pygame.
+    background = pygame.image.load("../assets/background/game_over.png").convert()
+    game.screen.blit(background)
 
 
 if __name__ == "__main__":
