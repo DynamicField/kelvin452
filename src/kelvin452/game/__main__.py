@@ -64,8 +64,9 @@ class Piece1Entity(Entity):
 
     def _tick(self):
         self.position.x += 200 * game.delta_time
-        if self.position.x > 900:
-            self.position.x = 900
+        if self.position.x > 1280:
+            game.world.destroy_entity(self)
+            end_game()
 
 
 class Entity_spawn(Entity):
@@ -146,6 +147,7 @@ class ProjEntity(Entity, ReactsToCollisions):
         self.position.x += 600 * game.delta_time
         if self.position.x > 1200:
             game.world.destroy_entity(self)
+            end_game()
 
     def _on_collide(self, other: Entity):
         if isinstance(other, FireEntity):
