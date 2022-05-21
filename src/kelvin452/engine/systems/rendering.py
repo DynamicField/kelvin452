@@ -1,3 +1,4 @@
+import os
 from typing import Tuple, Union, Callable, List
 import pygame
 from pygame.sprite import DirtySprite
@@ -85,6 +86,7 @@ class KelvinSprite(EntityComponent, DirtySprite):
         super().__init__()
         self.image = image
         self.rect = image.get_rect().move(*location)
+        self.blendmode = pygame.BLEND_ALPHA_SDL2  # Blend mode pour plus de performance
         self.__auto_update = auto_update
 
     @property
@@ -129,7 +131,6 @@ class FpsSprite(pygame.sprite.DirtySprite):
             if self.had_log_fps_before:
                 self.dirty = 1
                 self.had_log_fps_before = False
-
 
 
 make_sprite = KelvinSprite

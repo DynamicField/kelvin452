@@ -3,7 +3,7 @@ import random
 import pygame
 from kelvin452.engine import *
 
-duration = 1
+duration = 0.1
 
 
 class Spawner(Entity):
