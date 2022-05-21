@@ -88,7 +88,7 @@ class Entity_spawn(Entity):
         if self.compteurino <= 0:
             self.compte2 = True
             for i in range(3):
-                if z >= 5:
+                if z >= 3:
                     z = 0
                 p1ed_entity = Piece1Entity(0, b[z])
                 game.world.spawn_entity(p1ed_entity)
@@ -96,7 +96,7 @@ class Entity_spawn(Entity):
             self.compteurino = temps
 
     def compteur2(self, temps):
-        z = 0
+        z = 1
         b = [250, 340, 430]
         p10ed_number = random.randint(1, 3)
         self.compteuridos -= game.delta_time
