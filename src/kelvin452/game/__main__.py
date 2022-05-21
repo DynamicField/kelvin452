@@ -94,7 +94,7 @@ class Entity_spawn(Entity):
             self.compteurino = temps
 
     def compteur2(self, temps):
-        z = 0
+        z = 1
         b = [250, 340, 430]
         p10ed_number = random.randint(1, 3)
         self.compteuridos -= game.delta_time
