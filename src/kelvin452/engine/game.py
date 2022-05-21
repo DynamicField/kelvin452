@@ -33,7 +33,8 @@ class Game:
         "Le temps (en secondes) passé entre la frame précédente et la frame actuelle."
         self.time_factor = 1
         self.clock = pygame.time.Clock()
-        self.log_fps = "KELVIN_FPS" in os.environ
+        self.fps_cap = int(os.environ.get("KELVIN_FPS_CAP", "0"))
+        self.log_fps = True
 
     def initialize_game(self):
         """
@@ -82,7 +83,7 @@ class Game:
             self.ticking.run_ticks(TickOrder.POST_RENDER)  # Lancer le tick après le rendu
 
             # On utilise une horloge avec un max de 60 fps
-            self.clock.tick(60)
+            self.clock.tick(self.fps_cap)
             self.delta_time = self.clock.get_time() * self.time_factor / 1000  # Secondes écoulées
 
         for system in self.__systems.values():
