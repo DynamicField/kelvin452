@@ -113,7 +113,7 @@ class Piece10Entity(Entity):
     def __init__(self, x, y):
         super().__init__()
         self.position = Vector2(x, y)
-        self.compteurProj = random.uniform(4,6)
+        self.compteurProj = random.choice([3,3.1,3.2,3.3,3.4,3.5,3.6,3.7,3.8,3.9,4])
         self.compteurProjRes = self.compteurProj
         a = random.randint(32, 64)
         p10ed = pygame.transform.scale(assets.sprite("p10ed.png"), (a, a))
