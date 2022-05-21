@@ -124,9 +124,9 @@ class Piece10Entity(Entity):
         if self.position.x >= 575:
             self.compteurProj -= game.delta_time
             if self.compteurProj <= 0:
-                proj_entity = ProjEntity(self.position.x, self.position.y)
+                proj_entity = ProjEntity(self.position.x, self.position.y - random.randint(0, 50))
                 game.world.spawn_entity(proj_entity)
-                self.compteurProj = 0
+                self.compteurProj = 1
         self.position.x += 200 * game.delta_time
         if self.position.x > 580:
             self.position.x = 580
@@ -143,6 +143,8 @@ class ProjEntity(Entity, ReactsToCollisions):
 
     def _tick(self):
         self.position.x += 10
+        if self.position.x > 1200:
+            game.world.destroy_entity(self)
 
     def _on_collide(self, other: Entity):
         if isinstance(other, FireEntity):
