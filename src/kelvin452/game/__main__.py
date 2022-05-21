@@ -10,7 +10,7 @@ class FireEntity(Entity,ReactsToCollisions):
         self.position = Vector2(x, y)
         self.shoot_cooldown = 1
         self.timer = 0
-        huge_fire_sprite = pygame.transform.scale(assets.sprite("fire.png"), (90, 90))
+        huge_fire_sprite = pygame.transform.scale(assets.sprite("fire.png"), (70, 70))
         self.__sprite = self.attach_component(make_sprite(huge_fire_sprite, (x, y)))
         self.__collision = self.attach_component(CollisionHitBox(follow_sprite_rect=True, draw_box=False))
 
@@ -126,7 +126,7 @@ class Piece10Entity(Entity):
             if self.compteurProj <= 0:
                 proj_entity = ProjEntity(self.position.x, self.position.y - random.randint(0, 50))
                 game.world.spawn_entity(proj_entity)
-                self.compteurProj = 1
+                self.compteurProj = random.choice([3,3.1,3.2,3.3,3.4,3.5,3.6,3.7,3.8,3.9,4])
         self.position.x += 200 * game.delta_time
         if self.position.x > 580:
             self.position.x = 580
