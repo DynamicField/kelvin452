@@ -63,8 +63,8 @@ class Piece1Entity(Entity):
 
     def _tick(self):
         self.position.x += 200 * game.delta_time
-        if self.position.x > 900:
-            self.position.x = 900
+        if self.position.x > 1000:
+            self.position.x = 1000
 
 
 class Entity_spawn(Entity):
