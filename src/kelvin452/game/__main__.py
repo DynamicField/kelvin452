@@ -21,7 +21,7 @@ class FireEntity(Entity, ReactsToCollisions):
         self.timer -= game.delta_time
         if pygame.mouse.get_pressed()[0] or game.input.is_key_down(pygame.K_SPACE):
             if self.timer <= 0:
-                dragon_entity = DragonEntity(self.position.x, self.position.y + 30* game.delta_time)
+                dragon_entity = DragonEntity(self.position.x, self.position.y + 30)
                 game.world.spawn_entity(dragon_entity)
                 self.timer = self.shoot_cooldown
 
