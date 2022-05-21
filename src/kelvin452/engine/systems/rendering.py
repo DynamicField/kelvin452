@@ -2,6 +2,7 @@ from typing import Tuple, Union, Callable, List
 import pygame
 from pygame.sprite import DirtySprite
 
+from kelvin452.engine.fonts import default_font
 from kelvin452.engine.game import game
 from kelvin452.engine.systems.base import System
 from kelvin452.engine.systems.world import Entity, EntityComponent
@@ -14,10 +15,10 @@ class RenderingSystem(System):
 
     def __init__(self):
         super().__init__()
-        self._sprites = pygame.sprite.LayeredDirty()
+        self._fps_sprite = FpsSprite()
+        self._sprites = pygame.sprite.LayeredDirty(self._fps_sprite)
         self.background: pygame.Surface
         self.queued_rendering_actions: List[Callable] = []
-        self.last_frame_custom_render = False
         "Le groupe de sprites qui met à jour que ce qui est nécessaire."
 
     def _started(self):
@@ -34,6 +35,9 @@ class RenderingSystem(System):
         # Faire le rendu de l'écran entier en cas d'actions exceptionnelles
         if len(self.queued_rendering_actions) > 0:
             self._sprites.set_clip()
+
+        # Mettre à jour les FPS
+        self._fps_sprite.update()
 
         # Remplir avec l'arrière plan
         self._sprites.clear(screen, self.background)
@@ -103,6 +107,29 @@ class KelvinSprite(EntityComponent, DirtySprite):
 
     def _destroyed(self):
         self.kill()
+
+
+class FpsSprite(pygame.sprite.DirtySprite):
+    empty = pygame.surface.Surface((0, 0))
+
+    def __init__(self):
+        super().__init__()
+        self.image = FpsSprite.empty
+        self.rect = pygame.Rect(0, 0, 0, 0)
+        self.had_log_fps_before = False
+
+    def update(self, *args, **kwargs):
+        if game.log_fps:
+            text = f"{game.clock.get_fps():.0f} FPS"
+            self.image = default_font.render(text, True, (255, 255, 255))
+            self.dirty = 1
+            self.had_log_fps_before = True
+        else:
+            self.image = FpsSprite.empty
+            if self.had_log_fps_before:
+                self.dirty = 1
+                self.had_log_fps_before = False
+
 
 
 make_sprite = KelvinSprite
