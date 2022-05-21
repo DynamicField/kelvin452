@@ -4,7 +4,7 @@ from kelvin452.engine import *
 import random
 
 
-class FireEntity(Entity):
+class FireEntity(Entity,ReactsToCollisions):
     def __init__(self, x, y):
         super().__init__()
         self.position = Vector2(x, y)
@@ -12,7 +12,7 @@ class FireEntity(Entity):
         self.timer = 0
         huge_fire_sprite = pygame.transform.scale(assets.sprite("fire.png"), (90, 90))
         self.__sprite = self.attach_component(make_sprite(huge_fire_sprite, (x, y)))
-        self.__collision = self.attach_component(CollisionHitBox(follow_sprite_rect=True, draw_box=True))
+        self.__collision = self.attach_component(CollisionHitBox(follow_sprite_rect=True, draw_box=False))
 
     def add_y(self, add):  # add is the value we add in position y value, for example y == 10, add_y(10) put y at 20
         self.position.y += add
@@ -26,49 +26,45 @@ class FireEntity(Entity):
                 self.timer = self.shoot_cooldown
 
         if game.input.is_key_down(pygame.K_DOWN):
-            if self.position.y + 100 <= 602:
+            if self.position.y + 100 <= 720:
                 self.add_y(10)
         if game.input.is_key_down(pygame.K_UP):
-            if self.position.y - 10 >= 100:
+            if self.position.y - 10 >= 0:
                 self.add_y(-10)
 
 
-class DragonEntity(Entity):
+class DragonEntity(Entity,ReactsToCollisions):
     def __init__(self, x, y):
         super().__init__()
         self.position = Vector2(x, y)
         huge_dragon_sprite = pygame.transform.scale(assets.sprite("dragon.png"), (60, 43))
         self.__sprite = self.attach_component(make_sprite(huge_dragon_sprite, (x, y)))
-        self.__collision = self.attach_component(CollisionHitBox(follow_sprite_rect=True, draw_box=True))
-
-    def _on_collide(self, other: Entity):
-        print("oskour la collision vers " + str(other))
+        self.__collision = self.attach_component(CollisionHitBox(follow_sprite_rect=True, draw_box=False))
 
     def _tick(self):
         self.position.x -= 10
         if self.position.x < 0:
             game.world.destroy_entity(self)
 
+    def _on_collide(self, other: Entity):
+        if isinstance(other, Piece1Entity) or isinstance(other, Piece10Entity):
+            game.world.destroy_entity(other)
+            game.world.destroy_entity(self)
 
-class Piece1Entity(Entity,ReactsToCollisions):
+
+class Piece1Entity(Entity):
     def __init__(self, x, y):
         super().__init__()
         self.position = Vector2(x, y)
         a = random.randint(32, 64)
         p1ed = pygame.transform.scale(assets.sprite("p1ed.png"), (a, a))
         self.__sprite = self.attach_component(make_sprite(p1ed, (x, y)))
-        self.__collision = self.attach_component(CollisionHitBox(follow_sprite_rect=True, draw_box=True))
+        self.__collision = self.attach_component(CollisionHitBox(follow_sprite_rect=True, draw_box=False))
 
     def _tick(self):
         self.position.x += 200 * game.delta_time
-        if self.position.x > 1000:
-            self.position.x = 1000
-
-    def _on_collide(self, other: Entity):
-        if isinstance(other, DragonEntity):
-            game.world.destroy_entity(self)
-
-
+        if self.position.x > 900:
+            self.position.x = 900
 
 
 class Entity_spawn(Entity):
@@ -113,40 +109,47 @@ class Entity_spawn(Entity):
             self.compte2 = False
 
 
-class Piece10Entity(Entity,ReactsToCollisions):
+class Piece10Entity(Entity):
     def __init__(self, x, y):
         super().__init__()
         self.position = Vector2(x, y)
-        self.compteurProj = random.randint(4,6)
+        self.compteurProj = random.uniform(4,6)
         self.compteurProjRes = self.compteurProj
         a = random.randint(32, 64)
         p10ed = pygame.transform.scale(assets.sprite("p10ed.png"), (a, a))
         self.__sprite = self.attach_component(make_sprite(p10ed, (x, y)))
-        self.__collision = self.attach_component(CollisionHitBox(follow_sprite_rect=True, draw_box=True))
+        self.__collision = self.attach_component(CollisionHitBox(follow_sprite_rect=True, draw_box=False))
 
     def _tick(self):
         if self.position.x >= 575:
             self.compteurProj -= game.delta_time
             if self.compteurProj <= 0:
-                proj_entity = ProjEntity(self.position.x, self.position.y)
+                proj_entity = ProjEntity(self.position.x, self.position.y - random.randint(0, 50))
                 game.world.spawn_entity(proj_entity)
-                self.compteurProj = self.compteurProjRes
+                self.compteurProj = 1
         self.position.x += 200 * game.delta_time
         if self.position.x > 580:
             self.position.x = 580
 
 
-class ProjEntity(Entity,ReactsToCollisions):
+class ProjEntity(Entity, ReactsToCollisions):
     def __init__(self, x, y):
         super().__init__()
         self.position = Vector2(x, y)
         self.__launched = False
         proj = pygame.transform.scale(assets.sprite("projectile.png"), (100,100))
         self.__sprite = self.attach_component(make_sprite(proj, (x, y)))
-        self.__collision = self.attach_component(CollisionHitBox(follow_sprite_rect=True, draw_box=True))
+        self.__collision = self.attach_component(CollisionHitBox(follow_sprite_rect=True, draw_box=False))
 
     def _tick(self):
         self.position.x += 10
+        if self.position.x > 1200:
+            game.world.destroy_entity(self)
+
+    def _on_collide(self, other: Entity):
+        if isinstance(other, FireEntity):
+            game.world.destroy_entity(self)
+
 
 
 def game_start():
@@ -154,6 +157,7 @@ def game_start():
     game.renderer.background = assets.background("background.png")
     fire_entity = FireEntity(1024, 315)
     game.world.spawn_entity(fire_entity)
+
     # partie d'alix en dessous
     z = 0
     b = [250, 340, 430]
@@ -165,7 +169,6 @@ def game_start():
         p1ed_entity = Piece1Entity(0, b[z])
         game.world.spawn_entity(p1ed_entity)
         z += 1
-
 
 
 def launch_game():
