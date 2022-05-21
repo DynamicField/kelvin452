@@ -95,7 +95,7 @@ class Entity_spawn(Entity):
         self.compteuridos -= game.delta_time
         if self.compteuridos <= 0:
             for i in range(p10ed_number):
-                if z >= 5:
+                if z >= 3:
                     z = 0
                 p10ed_entity = Piece10Entity(0, b[z])
                 game.world.spawn_entity(p10ed_entity)
@@ -108,22 +108,23 @@ class Piece10Entity(Entity):
     def __init__(self, x, y):
         super().__init__()
         self.position = Vector2(x, y)
-        self.compteurProj = 2
+        self.compteurProj = random.randint(4,6)
+        self.compteurProjRes = self.compteurProj
         a = random.randint(32, 64)
         p10ed = pygame.transform.scale(assets.sprite("p10ed.png"), (a, a))
         self.__sprite = self.attach_component(make_sprite(p10ed, (x, y)))
         self.p10ed_rect = self.__sprite.rect
 
     def _tick(self):
-        self.position.x += 200 * game.delta_time
-        if self.position.x > game.viewport[0] - 700:
-            self.position.x = game.viewport[0] - 700
-        self.compteurProj -= game.delta_time
-        if self.position.x >= game.viewport[0] - 690:
+        if self.position.x >= 575:
+            self.compteurProj -= game.delta_time
             if self.compteurProj <= 0:
                 proj_entity = ProjEntity(self.position.x, self.position.y)
                 game.world.spawn_entity(proj_entity)
-        self.compteurProj = 2
+                self.compteurProj = self.compteurProjRes
+        self.position.x += 200 * game.delta_time
+        if self.position.x > 580:
+            self.position.x = 580
 
 
 class ProjEntity(Entity):
