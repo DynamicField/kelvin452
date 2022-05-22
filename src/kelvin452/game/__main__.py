@@ -4,6 +4,8 @@ import pygame.transform
 from kelvin452.engine import *
 import random
 
+from kelvin452.game.score import *
+
 
 class FireEntity(Entity, ReactsToCollisions):
     def __init__(self, x, y):
@@ -49,6 +51,7 @@ class DragonEntity(Entity, ReactsToCollisions):
 
     def _on_collide(self, other: Entity):
         if isinstance(other, Piece1Entity) or isinstance(other, Piece10Entity):
+            add_score(other.reward)
             game.world.destroy_entity(other)
             game.world.destroy_entity(self)
 
@@ -56,6 +59,7 @@ class DragonEntity(Entity, ReactsToCollisions):
 class Piece1Entity(Entity):
     def __init__(self, x, y):
         super().__init__()
+        self.reward = 1
         self.position = Vector2(x, y)
         a = random.randint(32, 64)
         p1ed = pygame.transform.scale(assets.sprite("p1ed.png"), (a, a))
@@ -114,7 +118,9 @@ class Entity_spawn(Entity):
 class Piece10Entity(Entity):
     def __init__(self, x, y):
         super().__init__()
+        self.reward = 2
         self.position = Vector2(x, y)
+        self.pre_shake_position = self.position
         self.compteurProj = random.uniform(4, 6)
         self.compteurProjRes = self.compteurProj
         a = random.randint(32, 64)
@@ -128,10 +134,18 @@ class Piece10Entity(Entity):
             if self.compteurProj <= 0:
                 proj_entity = ProjEntity(self.position.x, self.position.y - random.randint(0, 50))
                 game.world.spawn_entity(proj_entity)
-                self.compteurProj = 1
+                self.compteurProj = 1.0
+                self.position = self.pre_shake_position.copy()
         self.position.x += 200 * game.delta_time
         if self.position.x > 580:
             self.position.x = 580
+
+        # Le mage va trembler parce que c'est la concentration tout ça
+        if self.compteurProj < 0.5:
+            self.position.x = self.pre_shake_position.x + random.randint(-4, 4)
+            self.position.y = self.pre_shake_position.y + random.randint(-4, 4)
+        else:
+            self.pre_shake_position = self.position.copy()
 
 
 class ProjEntity(Entity, ReactsToCollisions):
@@ -159,6 +173,7 @@ def game_start():
     game.renderer.background = assets.background("background.png")
     fire_entity = FireEntity(1024, 315)
     game.world.spawn_entity(fire_entity)
+    game.world.spawn_entity(ScoreText())
 
     # partie d'alix en dessous
     z = 0
@@ -188,7 +203,10 @@ def end_game():
         game_over = True
         game.renderer.background = assets.background("game_over.png")
         for entity in game.world.get_entities():
-            entity.destroy()
+            # Pas toutes les entités ont l'attribut survive_game_over
+            # alors on utilise getattr pour avoir une valeur par défaut de False
+            if not getattr(entity, "survive_game_over", False):
+                entity.destroy()
 
 
 if __name__ == "__main__":
