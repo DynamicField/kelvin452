@@ -99,6 +99,7 @@ class KelvinSprite(EntityComponent, DirtySprite):
         super().__init__()
         self.image = image
         self.rect = image.get_rect().move(*location)
+        self.layer = 0
         self.blendmode = pygame.BLEND_ALPHA_SDL2  # Blend mode pour plus de performance
         self.__auto_update = auto_update
 
@@ -112,14 +113,6 @@ class KelvinSprite(EntityComponent, DirtySprite):
         if self.position != value:
             self.rect.x, self.rect.y = value.xy
             self.dirty = 1
-
-    @property
-    def layer(self):
-        return self.__get_group().get_layer_of_sprite(self)
-
-    @layer.setter
-    def layer(self, value: int):
-        self.__get_group().change_layer(self, value)
 
     def __get_group(self) -> pygame.sprite.LayeredDirty:
         return cast(pygame.sprite.LayeredDirty, self.groups()[0])
