@@ -100,7 +100,7 @@ class Entity_spawn(Entity):
             self.compteurino = temps
 
     def compteur2(self, temps):
-        z = 0
+        z = 1
         b = [250, 340, 430]
         p10ed_number = random.randint(1, 3)
         self.compteuridos -= game.delta_time
@@ -121,7 +121,7 @@ class Piece10Entity(Entity):
         self.reward = 2
         self.position = Vector2(x, y)
         self.pre_shake_position = self.position
-        self.compteurProj = random.uniform(4, 6)
+        self.compteurProj = random.randint(1, 2)
         self.compteurProjRes = self.compteurProj
         a = random.randint(32, 64)
         p10ed = pygame.transform.scale(assets.sprite("p10ed.png"), (a, a))
