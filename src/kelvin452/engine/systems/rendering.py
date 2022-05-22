@@ -1,4 +1,3 @@
-import os
 from typing import Tuple, Union, Callable, List, Optional, cast
 import pygame
 from pygame.sprite import DirtySprite
@@ -19,7 +18,7 @@ class RenderingSystem(System):
         self._fps_sprite = FpsSprite()
         self._sprites = pygame.sprite.LayeredDirty(self._fps_sprite)
         self.__background: Optional[pygame.Surface] = None
-        self.repaint_next_frame = False
+        self.repaint_next_frames = 15
         self.queued_rendering_actions: List[Callable] = []
         "Le groupe de sprites qui met à jour que ce qui est nécessaire."
 
@@ -36,7 +35,7 @@ class RenderingSystem(System):
         """
         # Faire le rendu de l'écran entier en cas d'actions exceptionnelles
         # (+ arrière-plan)
-        if len(self.queued_rendering_actions) > 0 or self.repaint_next_frame:
+        if len(self.queued_rendering_actions) > 0 or self.repaint_next_frames > 0:
             self._sprites.set_clip()
 
         # Mettre à jour les FPS
@@ -54,7 +53,8 @@ class RenderingSystem(System):
         # Mettre à jour l'écran
         pygame.display.update(updated_region)  # type: ignore
 
-        self.repaint_next_frame = False
+        if self.repaint_next_frames > 0:
+            self.repaint_next_frames -= 1
 
     def add_sprite(self, sprite: pygame.sprite.Sprite):
         """Ajoute un sprite qui sera affiché à l'écran.
@@ -87,7 +87,7 @@ class RenderingSystem(System):
     @background.setter
     def background(self, value):
         self.__background = value
-        self.repaint_next_frame = True
+        self.repaint_next_frames += 1
 
 
 class KelvinSprite(EntityComponent, DirtySprite):
