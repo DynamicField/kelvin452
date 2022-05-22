@@ -1,5 +1,5 @@
 import os
-from typing import Tuple, Union, Callable, List, Optional
+from typing import Tuple, Union, Callable, List, Optional, cast
 import pygame
 from pygame.sprite import DirtySprite
 
@@ -112,6 +112,17 @@ class KelvinSprite(EntityComponent, DirtySprite):
         if self.position != value:
             self.rect.x, self.rect.y = value.xy
             self.dirty = 1
+
+    @property
+    def layer(self):
+        return self.__get_group().get_layer_of_sprite(self)
+
+    @layer.setter
+    def layer(self, value: int):
+        self.__get_group().change_layer(self, value)
+
+    def __get_group(self) -> pygame.sprite.LayeredDirty:
+        return cast(pygame.sprite.LayeredDirty, self.groups()[0])
 
     def _entity_tick(self, entity: Entity):
         if self.__auto_update:
