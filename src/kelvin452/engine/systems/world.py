@@ -38,7 +38,7 @@ class WorldSystem(System):
     T = TypeVar('T', bound='Entity')
 
     def get_entities(self, type_filter: Type[T] = None) -> Iterable[T]:
-        if filter is not None:
+        if type_filter is not None:
             return self.__entities_per_type[type_filter]
         return self.entities
 
