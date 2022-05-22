@@ -179,10 +179,16 @@ def launch_game():
     game.start()
 
 
+game_over = False
+
+
 def end_game():
-    game.time_factor = 0
-    background = pygame.image.load(assets.background("game_over.png")).convert()
-    game.screen.blit(background)
+    global game_over
+    if not game_over:
+        game_over = True
+        game.renderer.background = assets.background("game_over.png")
+        for entity in game.world.get_entities():
+            entity.destroy()
 
 
 if __name__ == "__main__":
