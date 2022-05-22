@@ -169,7 +169,7 @@ class ProjEntity(Entity, ReactsToCollisions):
 
 
 def game_start():
-    game.log_fps = True
+    game.log_fps = False
     game.renderer.background = assets.background("background.png")
     fire_entity = FireEntity(1024, 315)
     game.world.spawn_entity(fire_entity)
