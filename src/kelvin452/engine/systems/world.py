@@ -39,8 +39,8 @@ class WorldSystem(System):
 
     def get_entities(self, type_filter: Type[T] = None) -> Iterable[T]:
         if type_filter is not None:
-            return self.__entities_per_type[type_filter]
-        return self.entities
+            return self.__entities_per_type[type_filter].copy()
+        return self.entities.copy()
 
     def get_single_entity(self, type_filter: Type[T]) -> Optional[T]:
         filtered = self.__entities_per_type[type_filter]
