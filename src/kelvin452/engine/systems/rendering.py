@@ -1,5 +1,5 @@
 import os
-from typing import Tuple, Union, Callable, List
+from typing import Tuple, Union, Callable, List, Optional
 import pygame
 from pygame.sprite import DirtySprite
 
@@ -18,14 +18,15 @@ class RenderingSystem(System):
         super().__init__()
         self._fps_sprite = FpsSprite()
         self._sprites = pygame.sprite.LayeredDirty(self._fps_sprite)
-        self.background: pygame.Surface
+        self.__background: Optional[pygame.Surface] = None
+        self.repaint_next_frame = False
         self.queued_rendering_actions: List[Callable] = []
         "Le groupe de sprites qui met à jour que ce qui est nécessaire."
 
     def _started(self):
         surface = pygame.Surface((1280, 720))
         surface.fill((50, 0, 0))
-        self.background = surface
+        self.__background = surface
 
     def render(self, screen: pygame.Surface):
         """Effectue le rendu de tous les sprites à l'écran.
@@ -34,14 +35,15 @@ class RenderingSystem(System):
             screen (pygame.Surface): L'écran où sont affichés les sprites
         """
         # Faire le rendu de l'écran entier en cas d'actions exceptionnelles
-        if len(self.queued_rendering_actions) > 0:
+        # (+ arrière-plan)
+        if len(self.queued_rendering_actions) > 0 or self.repaint_next_frame:
             self._sprites.set_clip()
 
         # Mettre à jour les FPS
         self._fps_sprite.update()
 
         # Remplir avec l'arrière plan
-        self._sprites.clear(screen, self.background)
+        self._sprites.clear(screen, self.__background)
         # Faire le rendu de tous les sprites 
         updated_region = self._sprites.draw(screen)
 
@@ -51,6 +53,8 @@ class RenderingSystem(System):
 
         # Mettre à jour l'écran
         pygame.display.update(updated_region)  # type: ignore
+
+        self.repaint_next_frame = False
 
     def add_sprite(self, sprite: pygame.sprite.Sprite):
         """Ajoute un sprite qui sera affiché à l'écran.
@@ -75,6 +79,15 @@ class RenderingSystem(System):
         :param action: La fonction à lancer
         """
         self.queued_rendering_actions.append(action)
+
+    @property
+    def background(self):
+        return self.__background
+
+    @background.setter
+    def background(self, value):
+        self.__background = value
+        self.repaint_next_frame = True
 
 
 class KelvinSprite(EntityComponent, DirtySprite):
