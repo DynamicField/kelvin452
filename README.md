@@ -6,3 +6,5 @@ Lancez le script `launch_game.py` contenu dans le dossier `scripts`.
 ```shell
 python scripts/launch_game.py
 ```
+
+![](https://i.imgur.com/lOBpL39.gif)
