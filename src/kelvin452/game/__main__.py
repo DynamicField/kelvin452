@@ -5,6 +5,7 @@ from kelvin452.engine import *
 import random
 
 from kelvin452.game.score import *
+from kelvin452.game.enemy import *
 
 
 class FireEntity(Entity, ReactsToCollisions):
@@ -174,6 +175,7 @@ def game_start():
     fire_entity = FireEntity(1024, 315)
     game.world.spawn_entity(fire_entity)
     game.world.spawn_entity(ScoreText())
+    game.world.spawn_entity(EnemyText())
 
     # partie d'alix en dessous
     z = 0
