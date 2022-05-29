@@ -5,6 +5,7 @@ from kelvin452.engine import *
 
 score = 0
 
+
 def add_score(value):
     global score
     score += value
@@ -16,7 +17,9 @@ class ScoreText(Entity):
         self.position.y = y
         self.previous_score = -1
         self.survive_game_over = True
-        self.text_sprite = self.attach_component(KelvinSprite(pygame.Surface((0, 0))))
+        self.text_sprite = KelvinSprite(pygame.Surface((0, 0)))
+        self.text_sprite.layer = 200
+        self.attach_component(self.text_sprite)
 
     def _tick(self):
         # Refaire le rendu du texte uniquement lorsque le score change

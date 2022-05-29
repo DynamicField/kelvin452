@@ -99,7 +99,7 @@ class CollisionHitBox(EntityComponent):
         self.__rect = Rect(0, 0, 0, 0)
         self.__rect_set = False
         self.ongoing_collisions: Set['CollisionHitBox'] = set()
-        self.draw_box = True  # draw_box
+        self.draw_box = draw_box
         self.margin = margin
 
     @property

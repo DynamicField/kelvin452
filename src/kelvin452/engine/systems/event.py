@@ -2,6 +2,7 @@ from typing import List
 
 import pygame
 
+from kelvin452.engine.game import game
 from kelvin452.engine.systems.base import System
 
 
@@ -10,6 +11,7 @@ class EventSystem(System):
 
     def __init__(self):
         super().__init__()
+        self.time_factor_backup = game.time_factor
         self.continue_running = True
         self.frame_events: List[pygame.event.Event] = []
 
@@ -19,4 +21,12 @@ class EventSystem(System):
             if event.type == pygame.QUIT:
                 self.continue_running = False
                 return
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_ESCAPE:
+                    if game.time_factor != 0:
+                        self.time_factor_backup = game.time_factor
+                        game.time_factor = 0
+                    else:
+                        game.time_factor = self.time_factor_backup
+
             self.frame_events.append(event)

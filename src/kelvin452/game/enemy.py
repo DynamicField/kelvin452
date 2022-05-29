@@ -15,8 +15,10 @@ class EnemyText(Entity):
         super().__init__()
         self.position = Vector2(x, y)
         self.previous_enemy = -1
-        self.survive_game_over = True
-        self.text_sprite = self.attach_component(KelvinSprite(pygame.Surface((self.position.x, self.position.y))))
+        self.survive_game_over = False
+        self.text_sprite = KelvinSprite(pygame.Surface((self.position.x, self.position.y)))
+        self.text_sprite.layer = 300
+        self.attach_component(self.text_sprite)
 
     def _tick(self):
         # Refaire le rendu du texte uniquement lorsque le enemy change

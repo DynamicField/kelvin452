@@ -4,6 +4,7 @@ import pygame.transform
 from kelvin452.engine import *
 import random
 
+from kelvin452.game.grounds import *
 from kelvin452.game.score import *
 from kelvin452.game.enemy import *
 
@@ -24,7 +25,7 @@ class FireEntity(Entity, ReactsToCollisions):
     def _tick(self):
         self.timer -= game.delta_time
         if pygame.mouse.get_pressed()[0] or game.input.is_key_down(pygame.K_SPACE):
-            if self.timer <= 0:
+            if self.timer <= 0 and game.time_factor != 0:
                 dragon_entity = DragonEntity(self.position.x, self.position.y + 30)
                 game.world.spawn_entity(dragon_entity)
                 self.timer = self.shoot_cooldown
@@ -54,8 +55,8 @@ class DragonEntity(Entity, ReactsToCollisions):
         if isinstance(other, Piece1Entity) or isinstance(other, Piece10Entity):
             add_score(other.reward)
             add_enemy(other.reward)
-            enemy_entity = EnemyEntity()
             for _ in range(other.reward):
+                enemy_entity = EnemyEntity()
                 game.world.spawn_entity(enemy_entity)
             game.world.destroy_entity(other)
             game.world.destroy_entity(self)
@@ -163,7 +164,7 @@ class Piece10Entity(Entity):
             self.position.x = 580
 
         # Le mage va trembler parce que c'est la concentration tout ça
-        if self.compteurProj < 0.5:
+        if self.compteurProj < 0.5 and game.time_factor != 0:
             self.position.x = self.pre_shake_position.x + random.randint(-4, 4)
             self.position.y = self.pre_shake_position.y + random.randint(-4, 4)
         else:
@@ -192,7 +193,11 @@ class ProjEntity(Entity, ReactsToCollisions):
 
 def game_start():
     game.log_fps = False
-    game.renderer.background = assets.background("background.png")
+    game.renderer.background = assets.grounds("background.png")
+    foreground = Foreground()
+    game.world.spawn_entity(foreground)
+    objects = Objects()
+    game.world.spawn_entity(objects)
     fire_entity = FireEntity(1024, 315)
     game.world.spawn_entity(fire_entity)
     game.world.spawn_entity(ScoreText())
@@ -224,7 +229,7 @@ def end_game():
     global game_over
     if not game_over:
         game_over = True
-        game.renderer.background = assets.background("game_over.png")
+        game.renderer.background = assets.grounds("game_over.png")
         for entity in game.world.get_entities():
             # Pas toutes les entités ont l'attribut survive_game_over
             # alors on utilise getattr pour avoir une valeur par défaut de False
