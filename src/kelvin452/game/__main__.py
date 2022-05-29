@@ -153,7 +153,7 @@ class ProjEntity(Entity, ReactsToCollisions):
         super().__init__()
         self.position = Vector2(x, y)
         self.__launched = False
-        proj = pygame.transform.scale(assets.sprite("projectile.png"), (100, 100))
+        proj = pygame.transform.scale(assets.sprite("projectile.png"), (90, 36))
         self.__sprite = self.attach_component(make_sprite(proj, (x, y)))
         self.__collision = self.attach_component(CollisionHitBox(follow_sprite_rect=True, draw_box=False))
 
