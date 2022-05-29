@@ -53,8 +53,29 @@ class DragonEntity(Entity, ReactsToCollisions):
     def _on_collide(self, other: Entity):
         if isinstance(other, Piece1Entity) or isinstance(other, Piece10Entity):
             add_score(other.reward)
+            add_enemy(other.reward)
+            enemy_entity = EnemyEntity()
+            for _ in range(other.reward):
+                game.world.spawn_entity(enemy_entity)
             game.world.destroy_entity(other)
             game.world.destroy_entity(self)
+
+
+class EnemyEntity(Entity):
+    def __init__(self):
+        super().__init__()
+        self.huge_x = 34  # largeur x du sprite
+        self.huge_y = 54  # hauteur y du sprite
+        self.position = Vector2(random.randint(1144, 1253 - self.huge_x), random.randint(400, 533))
+        huge_enemy_sprite = pygame.transform.scale(assets.sprite("enemy1.png"), (self.huge_x, self.huge_y))
+        self.__sprite = self.attach_component(make_sprite(huge_enemy_sprite, self.position))
+
+    def _tick(self):
+        if self.position.y < 602 - self.huge_y:
+            if self.position.y + 10 >= 602 - self.huge_y:
+                self.position.y += (602 - self.huge_y - self.position.y)
+            else:
+                self.position.y += 300 * game.delta_time
 
 
 class Piece1Entity(Entity):
@@ -133,7 +154,7 @@ class Piece10Entity(Entity):
         if self.position.x >= 575:
             self.compteurProj -= game.delta_time
             if self.compteurProj <= 0:
-                proj_entity = ProjEntity(self.position.x, self.position.y - random.randint(0, 50))
+                proj_entity = ProjEntity(self.position.x, self.position.y - random.randint(0, 19))
                 game.world.spawn_entity(proj_entity)
                 self.compteurProj = 1.0
                 self.position = self.pre_shake_position.copy()
@@ -154,7 +175,7 @@ class ProjEntity(Entity, ReactsToCollisions):
         super().__init__()
         self.position = Vector2(x, y)
         self.__launched = False
-        proj = pygame.transform.scale(assets.sprite("projectile.png"), (100, 100))
+        proj = pygame.transform.scale(assets.sprite("projectile.png"), (94, 38))
         self.__sprite = self.attach_component(make_sprite(proj, (x, y)))
         self.__collision = self.attach_component(CollisionHitBox(follow_sprite_rect=True, draw_box=False))
 
