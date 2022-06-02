@@ -5,9 +5,9 @@ from kelvin452.engine import *
 enemy = 0
 
 
-def add_enemy(value):
+def modify_enemy(amount):
     global enemy
-    enemy += value
+    enemy += amount
 
 
 class EnemyText(Entity):
