@@ -16,8 +16,8 @@ class FireEntity(Entity, ReactsToCollisions):
         self.position = Vector2(x, y)
         self.shoot_cooldown = 1
         self.timer = 0
-        huge_fire_sprite = pygame.transform.scale(assets.sprite("fire.png"), (90, 90))
-        self.__sprite = self.attach_component(make_sprite(huge_fire_sprite, (x, y)))
+        self.huge_fire_sprite = pygame.transform.scale(assets.sprite("fire.png"), (90, 90))
+        self.__sprite = self.attach_component(make_sprite(self.huge_fire_sprite, (x, y)))
         self.__collision = self.attach_component(CollisionHitBox(follow_sprite_rect=True, draw_box=False))
 
     def add_y(self, add):  # add is the value we add in position y value, for example y == 10, add_y(10) put y at 20
@@ -49,18 +49,19 @@ class DragonEntity(Entity, ReactsToCollisions):
 
     def _tick(self):
         self.position.x -= 600 * game.delta_time
-        if self.position.x < 0:
+        if self.position.x < -100:
             game.world.destroy_entity(self)
 
     def _on_collide(self, other: Entity):
-        if isinstance(other, ClassicCoinEntity):  # or isinstance(other, Piece10Entity):
-            add_score(other.reward)
-            modify_enemy(other.reward)
-            for _ in range(other.reward):
-                enemy_entity = EnemyEntity()
-                game.world.spawn_entity(enemy_entity)
-            game.world.destroy_entity(other)
-            game.world.destroy_entity(self)
+        if type(other) in CoinSpawner.get_coin_list():
+            if hasattr(other, 'reward'):
+                add_score(other.reward)
+                modify_enemy(other.reward)
+                for _ in range(other.reward):
+                    enemy_entity = EnemyEntity()
+                    game.world.spawn_entity(enemy_entity)
+                game.world.destroy_entity(other)
+                game.world.destroy_entity(self)
 
 
 class EnemyEntity(Entity):
@@ -85,9 +86,9 @@ class ClassicCoinEntity(Entity):
         super().__init__()
         self.reward = 1
         self.position = Vector2(x, y)
-        size = random.randint(32, 64)
-        coin = pygame.transform.scale(assets.sprite("classic_coin.png"), (size, size))
-        self.__sprite = self.attach_component(make_sprite(coin, (self.position.x, self.position.y)))
+        self.size = random.randint(32, 64)
+        self.huge_coin_sprite = pygame.transform.scale(assets.sprite("classic_coin.png"), (self.size, self.size))
+        self.__sprite = self.attach_component(make_sprite(self.huge_coin_sprite, (self.position.x, self.position.y)))
         self.__collision = self.attach_component(CollisionHitBox(follow_sprite_rect=True, draw_box=False))
 
     def _tick(self):
@@ -97,16 +98,80 @@ class ClassicCoinEntity(Entity):
             modify_life(-1)
 
 
+class WizardCoinEntity(Entity):
+    def __init__(self, x, y):
+        super().__init__()
+        self.reward = 2
+        self.position = Vector2(x, y)
+        self.position_backup = self.position
+        self.shoot_cooldown = random.randint(1, 2)
+        self.timer = self.shoot_cooldown
+        self.size = random.randint(32, 64)
+        self.huge_coin_sprite = pygame.transform.scale(assets.sprite("wizard_coin.png"), (self.size, self.size))
+        self.__sprite = self.attach_component(make_sprite(self.huge_coin_sprite, (self.position.x, self.position.y)))
+        self.__collision = self.attach_component((CollisionHitBox(follow_sprite_rect=True, draw_box=False)))
+
+    def _tick(self):
+        if self.position.x >= 575:
+            self.timer -= game.delta_time
+            if self.timer <= 0:
+                projectile_entity = WizardProjectileEntity(self.position.x, self.position.y - random.randint(-19, 19))
+                game.world.spawn_entity(projectile_entity)
+                self.timer = self.shoot_cooldown
+                self.position = self.position_backup.copy()
+        else:
+            if self.position.x > 580:
+                self.position.x = 580
+            else:
+                self.position.x += 200 * game.delta_time
+
+        # milkshake moment !
+        if self.timer < 0.5 and game.time_factor != 0:
+            self.position.x = self.position_backup.x + random.randint(-4, 4)
+            self.position.y = self.position_backup.y + random.randint(-4, 4)
+        else:
+            self.position_backup = self.position.copy()
+
+
+class WizardProjectileEntity(Entity, ReactsToCollisions):
+    def __init__(self, x, y):
+        super().__init__()
+        self.position = Vector2(x, y)
+        self.__launched = False
+        huge_projectile_sprite = pygame.transform.scale(assets.sprite("wizard_projectile.png"), (94, 38))
+        self.__sprite = self.attach_component(make_sprite(huge_projectile_sprite, (self.position.x, self.position.y)))
+        self.__collision = self.attach_component(CollisionHitBox(follow_sprite_rect=True, draw_box=False))
+
+    def _tick(self):
+        self.position.x += 600 * game.delta_time
+        if self.position.x > 1200:
+            game.world.destroy_entity(self)
+            modify_life(-1)
+
+    def _on_collide(self, other: Entity):
+        if isinstance(other, FireEntity):
+            game.world.destroy_entity(self)
+
+
 class CoinSpawner(Entity):
+    coins_list_setup = [(ClassicCoinEntity, 1, 100 / 100), (WizardCoinEntity, 2, 80 / 100)]
+
+    @staticmethod
+    def get_coin_list():
+        coin_list = []
+        for i in range(len(CoinSpawner.coins_list_setup)):
+            coin_list.append(CoinSpawner.coins_list_setup[i][0])
+        return coin_list
+
     def __init__(self):
         super().__init__()
 
         # self.coins_list : [(name, cost, probability / 100), (name, cost, probability / 100)]
-        self.coins_list = [(ClassicCoinEntity, 1, 100 / 100)]  # , (MageCoinEntity, 2, 50 / 100)]
+
         self.level = 1
         self.spawn_points = self.level ** 2  # the number of points the game will use by wave to spawn coins
         self.wave = True
-        self.spawn_cooldown = 0.2
+        self.spawn_cooldown = 0.3
         self.spawn_timer = 0
         self.pre_wave_counter = False
         self.pre_wave_timer = 5
@@ -115,20 +180,25 @@ class CoinSpawner(Entity):
 
     def spawn_listing(self):
         # time to choose the coins who will spawn
-        index = -1  # the index for the coin_list
-        while self.spawn_points > 0:
-            if self.coins_list[index][1] <= self.spawn_points:
-                if (random.randint(1, 100) / 100) <= self.coins_list[index][2]:
-                    self.spawn_points -= self.coins_list[index][1]
-                    self.spawn_list.append(self.coins_list[index][0])
-                else:
-                    if -index == len(self.coins_list):
-                        index = -1
-                    else:
-                        index -= 1
+        print(f"spawnpoint : {self.spawn_points}")
+        for i in range(-1, - 1 - len(self.coins_list_setup), -1):
+            print(f"i : {i}")
+            probability = self.coins_list_setup[i][2]
+            cost = self.coins_list_setup[i][1]
+            print(f"cost : {cost}")
+            while (self.spawn_points >= cost) and (random.randint(1, 100) / 100 >= 1 - probability):
+                self.spawn_points -= cost
+                print(f"spawnpoint : {self.spawn_points}")
+                self.spawn_list.append(self.coins_list_setup[i][0])
 
         # Now, randomizing for the spawning list
         random.shuffle(self.spawn_list)
+
+    def no_coins(self): # it will look if all coins are dead
+        for i in self.get_coin_list():
+            if len(game.world.get_entities(i)) != 0:
+                return False
+        return True
 
     def _tick(self):
         if self.wave:
@@ -145,7 +215,7 @@ class CoinSpawner(Entity):
         self.spawn_timer -= game.delta_time
 
         # wave ending
-        if len(game.world.get_entities(ClassicCoinEntity)) == 0 and not self.pre_wave_counter:
+        if CoinSpawner.no_coins(self) and not self.pre_wave_counter:
             self.level += 1
             self.spawn_list = []
             self.spawn_points = self.level ** 2
