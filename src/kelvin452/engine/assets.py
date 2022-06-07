@@ -1,9 +1,12 @@
 import os
 import pygame
-from functools import cached_property
+import sys
+
+def is_packaged():
+    return getattr(sys, 'frozen', False) and hasattr(sys, '_MEIPASS')
 
 assets_location = os.path.realpath(
-    os.path.join(os.path.dirname(__file__), "../../../assets")
+    os.path.join(os.path.dirname(__file__), "../../assets" if is_packaged() else "../../../assets")
 )
 
 assets = {}
