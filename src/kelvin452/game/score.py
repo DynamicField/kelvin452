@@ -6,6 +6,11 @@ from kelvin452.engine import *
 score = 0
 
 
+def basic_score(value):
+    global score
+    score = value
+
+
 def add_score(value):
     global score
     score += value
