@@ -5,6 +5,11 @@ from kelvin452.engine import *
 enemy = 0
 
 
+def basic_enemy(value):
+    global enemy
+    enemy = value
+
+
 def modify_enemy(amount):
     global enemy
     enemy += amount

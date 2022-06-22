@@ -4,6 +4,7 @@ from kelvin452.engine.fonts import default_font
 from kelvin452.engine import *
 from kelvin452.game.__main__ import end_game
 
+
 life = 1
 
 
@@ -15,6 +16,7 @@ def modify_life(amount):
 
 
 class LifeText(Entity):
+
     def __init__(self, x=1161, y=28):
         super().__init__()
         self.position = Vector2(x, y)
@@ -25,6 +27,9 @@ class LifeText(Entity):
         self.attach_component(self.text_sprite)
 
     def _tick(self):
+        global life
+        if life == 0:
+            end_game()
         if self.previous_life != life:
             self.text_sprite.image = default_font.render(f"LIFE : {life}", True, (255, 0, 0))
 
