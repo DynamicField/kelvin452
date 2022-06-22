@@ -19,6 +19,7 @@ def add_score(value):
 class ScoreText(Entity):
     def __init__(self, y=670):
         super().__init__()
+        basic_score(0)
         self.position.y = y
         self.previous_score = -1
         self.survive_game_over = True
