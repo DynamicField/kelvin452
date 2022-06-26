@@ -17,14 +17,17 @@ class WorldSystem(System):
         self.entities: List[Entity] = []
         self.__entities_per_type: Dict[type, List[Entity]] = collections.defaultdict(list)
 
-    def spawn_entity(self, entity: 'Entity'):
+    T = TypeVar('T', bound='Entity')
+
+    def spawn_entity(self, entity: T) -> T:
         if entity in self.entities:
             return
-        
+
         self.entities.append(entity)
         for parent_type in inspect.getmro(type(entity)):
             self.__entities_per_type[parent_type].append(entity)
         entity.notify_spawned()
+        return entity
 
     def destroy_entity(self, entity: 'Entity'):
         if entity not in self.entities:
@@ -35,9 +38,7 @@ class WorldSystem(System):
             self.__entities_per_type[parent_type].remove(entity)
         entity.notify_destroyed()
 
-    T = TypeVar('T', bound='Entity')
-
-    def get_entities(self, type_filter: Type[T] = None) -> Iterable[T]:
+    def get_entities(self, type_filter: Type[T] = None) -> List[T]:
         if type_filter is not None:
             return self.__entities_per_type[type_filter].copy()
         return self.entities.copy()
@@ -103,7 +104,7 @@ class Entity(HasLifetime):
         def run_tick():
             self._tick()
             for component in self.components:
-                if isinstance(component, EntityComponent):
+                if isinstance(component, EntityCompatibleComponent):
                     component.notify_entity_tick(self)
 
         game.ticking.add_tick_function(run_tick, TickOrder.ENTITY).attach_to(self)
@@ -126,10 +127,10 @@ class Entity(HasLifetime):
         return f"{type(self).__name__}{self.id}"
 
 
-class EntityComponent(Component):
+class EntityCompatibleComponent(Component):
     def __init__(self):
         super().__init__()
-        self.attached_entity: Entity = cast(Any, None)
+        self.attached_entity: Optional[Entity] = cast(Any, None)
 
     def _entity_tick(self, entity: Entity):
         pass
@@ -138,10 +139,20 @@ class EntityComponent(Component):
         if not self.is_destroyed:
             self._entity_tick(entity)
 
+    def report_attachment(self, target: HasLifetime):
+        if isinstance(target, Entity):
+            self.attached_entity = target
+        super().report_attachment(target)
+
+
+class EntityComponent(EntityCompatibleComponent):
+    def __init__(self):
+        super().__init__()
+        self.attached_entity: Entity
+
     def _attached(self, attached_to: Entity):
         pass
 
     def report_attachment(self, target: HasLifetime):
         assert isinstance(target, Entity), f"Can't attach a component of type {type(self)} to a non-entity."
-        self.attached_entity = target
         super().report_attachment(target)

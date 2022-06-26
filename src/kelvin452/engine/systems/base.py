@@ -6,6 +6,7 @@ class HasLifetime:
         self.__components = set()
         self.__is_alive = True
         self.destroyed_notifiers: List[Callable] = []
+        self.attached_listeners: Dict[HasLifetime, Callable] = {}
         super().__init__()
 
     @property
@@ -43,15 +44,25 @@ class HasLifetime:
         assert not component.is_destroyed, "The component must be alive."
         if component not in self.__components:
             self.__components.add(component)
-            component.destroyed_notifiers.append(lambda: self.__on_component_destroyed(component))
+            self.attached_listeners[component] = lambda: self.__on_component_destroyed(component)
+            component.destroyed_notifiers.append(self.attached_listeners[component])
             component.report_attachment(self)
             self._component_attached(component)
         return component
 
+    def detach_component(self, component: 'Component'):
+        assert self.is_alive, "The entity/system must be alive."
+        if component in self.__components:
+            self.__components.remove(component)
+            component.destroyed_notifiers.remove(self.attached_listeners[component])
+            del self.attached_listeners[component]
+
+            component.report_detachment()
+            self._component_detached(component)
+
     def __on_component_destroyed(self, component: 'Component'):
         if self.is_alive:
-            self.__components.remove(component)
-            self._component_detached(component)
+            self.detach_component(component)
 
 
 class Component(HasLifetime):
@@ -74,9 +85,17 @@ class Component(HasLifetime):
     def _attached(self, attached_to):
         pass
 
+    def _detached(self):
+        pass
+
     def report_attachment(self, target: HasLifetime):
         self._attached_to = target
         self._attached(target)
+
+    def report_detachment(self):
+        self._attached_to = None
+        if self.is_alive:
+            self._detached()
 
     def attach_to(self, target: HasLifetime):
         target.attach_component(self)

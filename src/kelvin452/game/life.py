@@ -2,7 +2,7 @@ import pygame
 
 from kelvin452.engine.fonts import default_font
 from kelvin452.engine import *
-from kelvin452.game.__main__ import end_game
+import kelvin452.game.__main__ as main
 
 life = 1
 
@@ -11,7 +11,7 @@ def modify_life(amount):
     global life
     life += amount
     if life <= 0:
-        end_game()
+        main.end_game()
 
 
 class LifeText(Entity):

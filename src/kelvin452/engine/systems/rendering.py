@@ -5,7 +5,8 @@ from pygame.sprite import DirtySprite
 from kelvin452.engine.fonts import default_font
 from kelvin452.engine.game import game
 from kelvin452.engine.systems.base import System
-from kelvin452.engine.systems.world import Entity, EntityComponent
+from kelvin452.engine.systems.ticking import TickOrder
+from kelvin452.engine.systems.world import Entity, EntityComponent, EntityCompatibleComponent
 
 
 class RenderingSystem(System):
@@ -90,29 +91,52 @@ class RenderingSystem(System):
         self.repaint_next_frames += 1
 
 
-class KelvinSprite(EntityComponent, DirtySprite):
+class Layers:
+    DEFAULT = 0
+    UI = 300
+
+
+EMPTY_SURFACE = pygame.Surface((0, 0))
+
+
+class KelvinSprite(EntityCompatibleComponent, DirtySprite):
     rect: pygame.Rect
     image: pygame.surface.Surface  # Bye bye optional
 
     def __init__(self, image: pygame.surface.Surface, location: Tuple[float, float] = (0, 0),
-                 auto_update=True):
+                 auto_update=True, layer=Layers.DEFAULT):
         super().__init__()
         self.image = image
         self.rect = image.get_rect().move(*location)
-        self.layer = 0
+        self.layer = layer
         self.blendmode = pygame.BLEND_ALPHA_SDL2  # Blend mode pour plus de performance
         self.__auto_update = auto_update
+        self.__position = pygame.Vector2(self.rect.x, self.rect.y)
+        self.dirty = 1
+        game.ticking.add_tick_function(lambda: self._update_dirty_state(), TickOrder.POST_ENTITY).attach_to(self)
 
     @property
     def position(self):
-        return pygame.Vector2(self.rect.x, self.rect.y)
+        return self.__position
 
     @position.setter
     def position(self, value: Union[pygame.Vector2, Tuple[float, float]]):
         value = pygame.Vector2(value)
-        if self.position != value:
-            self.rect.x, self.rect.y = value.xy
+        if self.__position != value:
+            self.__position = value
             self.dirty = 1
+
+    def change_layer(self, layer):
+        if len(self.groups()) == 0:
+            self.layer = layer
+        else:
+            self.__get_group().change_layer(self, layer)
+
+    def move_to_front(self):
+        self.__get_group().move_to_front(self)
+
+    def move_to_back(self):
+        self.__get_group().move_to_back(self)
 
     def __get_group(self) -> pygame.sprite.LayeredDirty:
         return cast(pygame.sprite.LayeredDirty, self.groups()[0])
@@ -127,6 +151,12 @@ class KelvinSprite(EntityComponent, DirtySprite):
     def _destroyed(self):
         self.kill()
 
+    def _update_dirty_state(self):
+        if not self.dirty:
+            if self.rect.x != self.position.x or self.rect.y != self.position.y:
+                self.dirty = 1
+        if self.dirty:
+            self.rect.x, self.rect.y = self.position.xy
 
 class FpsSprite(pygame.sprite.DirtySprite):
     empty = pygame.surface.Surface((0, 0))
