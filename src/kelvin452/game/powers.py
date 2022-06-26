@@ -15,7 +15,7 @@ class Powers:
         self.coins_pierced = 1
         self.coins_pierced_upgrade_cost = 50
         self.fire_rate = 1
-        self.fire_rate_upgrade_cost = 10
+        self.fire_rate_upgrade_cost = 1
 
     def next_fire_rate_upgrade(self):
         return Powers.Upgrade(self.fire_rate, self.fire_rate * 0.78, self.fire_rate_upgrade_cost)
@@ -142,7 +142,7 @@ class PowerupMenu(Entity, EventConsumer):
         return False
 
     def get_priority(self):
-        return 300  # UI
+        return 299  # UI fixme sale
 
 
 if __name__ == "__main__":

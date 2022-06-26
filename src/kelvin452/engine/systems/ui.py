@@ -4,6 +4,7 @@ import pygame
 from pygame import Vector2
 
 import kelvin452.engine.fonts as fonts
+from kelvin452.engine.systems.event import EventConsumer
 from kelvin452.engine.game import game
 from kelvin452.engine.systems.base import Component
 from kelvin452.engine.systems.ticking import TickOrder
@@ -173,7 +174,7 @@ class TextBlock(UIElement):
 U = TypeVar('U', bound=UIElement)
 
 
-class Button(UIElement, Generic[U]):
+class Button(UIElement, EventConsumer, Generic[U]):
     def __init__(self, size: Vector2, background: pygame.Surface, child: Optional[U]):
         super().__init__()
         self.__background_image = background
@@ -236,18 +237,22 @@ class Button(UIElement, Generic[U]):
         if element == self.child:
             self.child = None
 
-    def _tick(self):
-        super()._tick()
+    def consume_event(self, new_event: pygame.event.Event) -> bool:
         if self.on_click is not None:
             hit_rect = pygame.Rect(self.position, self.size)
-            if hit_rect.collidepoint(game.input.get_mouse_position()):
-                if game.input.is_mouse_left_click_down():
-                    self.click_hold = True
-                elif self.click_hold:  # Relâché
-                    self.click_hold = False
+            mouse_pos = game.input.get_mouse_position()
+            if new_event.type == pygame.MOUSEBUTTONDOWN and hit_rect.collidepoint(mouse_pos):
+                self.click_hold = True
+                return True
+            elif self.click_hold and new_event.type == pygame.MOUSEBUTTONUP:
+                if hit_rect.collidepoint(mouse_pos):
                     self.on_click()
-            elif not game.input.is_mouse_left_click_down():
+                    return True
                 self.click_hold = False
+        return False
+
+    def get_priority(self):
+        return 300
 
 
 class Image(UIElement):
