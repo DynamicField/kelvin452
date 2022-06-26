@@ -5,6 +5,11 @@ from kelvin452.engine import *
 enemy = 0
 
 
+def basic_enemy(value):
+    global enemy
+    enemy = value
+
+
 def modify_enemy(amount):
     global enemy
     enemy += amount
@@ -13,6 +18,7 @@ def modify_enemy(amount):
 class EnemyText(Entity):
     def __init__(self, x=1161, y=612):
         super().__init__()
+        basic_enemy(0)
         self.position = Vector2(x, y)
         self.previous_enemy = -1
         self.survive_game_over = False

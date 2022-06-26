@@ -7,6 +7,11 @@ import kelvin452.game.__main__ as main
 life = 1
 
 
+def basic_life(value):
+    global life
+    life = value
+
+
 def modify_life(amount):
     global life
     life += amount
@@ -15,8 +20,10 @@ def modify_life(amount):
 
 
 class LifeText(Entity):
+
     def __init__(self, x=1161, y=28):
         super().__init__()
+        basic_life(1)
         self.position = Vector2(x, y)
         self.previous_life = 0
         self.survive_game_over = False
@@ -25,6 +32,9 @@ class LifeText(Entity):
         self.attach_component(self.text_sprite)
 
     def _tick(self):
+        global life
+        if life == 0:
+            end_game()
         if self.previous_life != life:
             self.text_sprite.image = default_font.render(f"LIFE : {life}", True, (255, 0, 0))
 

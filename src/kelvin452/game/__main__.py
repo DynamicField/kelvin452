@@ -7,8 +7,8 @@ import random
 from kelvin452.game.grounds import *
 from kelvin452.game.score import *
 from kelvin452.game.enemy import *
-from kelvin452.game.life import *
 from kelvin452.game.powers import *
+import kelvin452.game.life as life
 
 
 class FireEntity(Entity, ReactsToCollisions):
@@ -16,7 +16,7 @@ class FireEntity(Entity, ReactsToCollisions):
         super().__init__()
         self.position = Vector2(x, y)
         self.powers = Powers()
-        self.timer = 0
+        self.timer = 0.1
         self.huge_fire_sprite = pygame.transform.scale(assets.sprite("fire.png"), (90, 90))
         self.__sprite = self.attach_component(make_sprite(self.huge_fire_sprite, (x, y)))
         self.__collision = self.attach_component(CollisionHitBox(follow_sprite_rect=True, draw_box=False))
@@ -107,7 +107,7 @@ class ClassicCoinEntity(Entity):
         self.position.x += 200 * game.delta_time
         if self.position.x > 1280:
             game.world.destroy_entity(self)
-            modify_life(-1)
+            life.modify_life(-1)
 
 
 class WizardCoinEntity(Entity):
@@ -144,6 +144,9 @@ class WizardCoinEntity(Entity):
         else:
             self.position_backup = self.position.copy()
 
+    def set_cooldown(self, value):
+        self.shoot_cooldown = value
+
 
 class WizardProjectileEntity(Entity, ReactsToCollisions):
     def __init__(self, x, y):
@@ -158,7 +161,7 @@ class WizardProjectileEntity(Entity, ReactsToCollisions):
         self.position.x += 600 * game.delta_time
         if self.position.x > 1200:
             game.world.destroy_entity(self)
-            modify_life(-1)
+            life.modify_life(-1)
 
     def _on_collide(self, other: Entity):
         if isinstance(other, FireEntity):
@@ -258,11 +261,58 @@ class CoinSpawner(Entity):
         self.powerup_time = False
 
 
-def game_start():
-    from kelvin452.game.life import LifeText
+def start_menu():
+    game.renderer.background = assets.grounds("menu_background.png")
+    start_button = StartButtonEntity()
+    game.world.spawn_entity(start_button)
 
-    game.log_fps = False
-    game.renderer.__background = assets.grounds("background.png")
+
+class StartButtonEntity(Entity):
+    def __init__(self, x=640, y=360):
+        super().__init__()
+        self.huge_x = 400
+        self.huge_y = 120
+        self.position = Vector2(x - self.huge_x / 2, y - self.huge_y / 2)
+        self.huge_button_sprite = pygame.transform.scale(assets.sprite("start_game_button.png"),
+                                                         (self.huge_x, self.huge_y))
+        self.__sprite = self.attach_component(make_sprite(self.huge_button_sprite, self.position))
+        # self.__collision = self.attach_component((CollisionHitBox(follow_sprite_rect=True, draw_box=True)))
+
+    def _tick(self):
+        if (self.position.x <= pygame.mouse.get_pos()[0] <= self.position.x + self.huge_x) and (
+                self.position.y <= pygame.mouse.get_pos()[1] <= self.position.y + self.huge_y):
+            if pygame.mouse.get_pressed()[0]:
+                print("test")
+                for entity in game.world.get_entities():
+                    entity.destroy()
+                game_start()
+
+
+class RestartButtonEntity(Entity):
+    def __init__(self, x=640, y=500):
+
+        super().__init__()
+        self.huge_x = 400
+        self.huge_y = 120
+        self.position = Vector2(x - self.huge_x / 2, y - self.huge_y / 2)
+        self.huge_button_sprite = pygame.transform.scale(assets.sprite("restart_button.png"),
+                                                         (self.huge_x, self.huge_y))
+        self.__sprite = self.attach_component(make_sprite(self.huge_button_sprite, self.position))
+        # self.__collision = self.attach_component((CollisionHitBox(follow_sprite_rect=True, draw_box=True)))
+
+    def _tick(self):
+        global game_over
+        if (self.position.x <= pygame.mouse.get_pos()[0] <= self.position.x + self.huge_x) and (
+                self.position.y <= pygame.mouse.get_pos()[1] <= self.position.y + self.huge_y):
+            if pygame.mouse.get_pressed()[0]:
+                for entity in game.world.get_entities():
+                    entity.destroy()
+                game_over = False
+                game_start()
+
+
+def game_start():
+    game.renderer.background = assets.grounds("background.png")
     foreground = Foreground()
     game.world.spawn_entity(foreground)
     objects = Objects()
@@ -272,12 +322,13 @@ def game_start():
     game.world.spawn_entity(CoinSpawner())
     game.world.spawn_entity(ScoreText())
     game.world.spawn_entity(EnemyText())
-    game.world.spawn_entity(LifeText())
+    game.world.spawn_entity(life.LifeText())
 
 
 def launch_game():
     game.initialize_game()
-    game.on_start(game_start)
+    game.on_start(start_menu)
+    game.log_fps = False
     game.start()
 
 
@@ -288,14 +339,14 @@ def end_game():
     global game_over
     if not game_over:
         game_over = True
-        game.renderer.__background = assets.grounds("game_over.png")
+        game.renderer.background = assets.grounds("game_over.png")
         for entity in game.world.get_entities():
             # Pas toutes les entités ont l'attribut survive_game_over
             # alors on utilise getattr pour avoir une valeur par défaut de False
             if not getattr(entity, "survive_game_over", False):
                 entity.destroy()
-        game_over = False
-        game_start()
+        restart_button = RestartButtonEntity()
+        game.world.spawn_entity(restart_button)
 
 
 if __name__ == "__main__":
