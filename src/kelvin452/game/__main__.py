@@ -4,6 +4,7 @@ import pygame.transform
 from kelvin452.engine import *
 import random
 
+from math import sqrt
 from kelvin452.game.grounds import *
 from kelvin452.game.score import *
 from kelvin452.game.enemy import *
@@ -195,9 +196,10 @@ class CoinSpawner(Entity):
         super().__init__()
 
         # self.coins_list : [(name, cost, probability / 100), (name, cost, probability / 100)]
-
         self.level = 1
-        self.spawn_points = self.level ** 2  # the number of points the game will use by wave to spawn coins
+
+        # the number of points the game will use by wave to spawn coins
+        self.spawn_points = self.compute_spawn_point()
         self.wave = True
         self.spawn_cooldown = 0.3
         self.spawn_timer = 0
@@ -207,6 +209,11 @@ class CoinSpawner(Entity):
         self.powerup_time = False
 
         self.spawn_list = []
+
+    def compute_spawn_point(self):
+        # it calculates the numbers of points who will use by wave to spawn coins
+        phi = (1 + sqrt(5)) / 2
+        return (1 / sqrt(5)) * ((phi ** self.level) - (-1 / phi) ** self.level)
 
     def spawn_listing(self):
         # time to choose the coins who will spawn
@@ -249,7 +256,7 @@ class CoinSpawner(Entity):
             if CoinSpawner.no_coins(self) and not self.pre_wave_counter:
                 self.level += 1
                 self.spawn_list = []
-                self.spawn_points = self.level ** 2
+                self.spawn_points = self.compute_spawn_point()
                 self.pre_wave_counter = True
 
                 self.powerup_time = True
