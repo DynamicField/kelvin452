@@ -39,7 +39,7 @@ class EventSystem(System):
                 self.continue_running = False
                 return
             event_consumed = consume_event_for_entities(event)
-            if event_consumed and event.type == pygame.KEYDOWN:
+            if not event_consumed and event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_ESCAPE:
                     if game.time_factor != 0:
                         self.time_factor_backup = game.time_factor
