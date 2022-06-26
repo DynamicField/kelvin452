@@ -7,4 +7,4 @@ Lancez le script `launch_game.py` contenu dans le dossier `scripts`.
 python scripts/launch_game.py
 ```
 
-![](https://i.imgur.com/lOBpL39.gif)
+![](https://i.imgur.com/CG3r3Di.gif)
