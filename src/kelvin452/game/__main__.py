@@ -7,7 +7,7 @@ import random
 from kelvin452.game.grounds import *
 from kelvin452.game.score import *
 from kelvin452.game.enemy import *
-from kelvin452.game.powers import *
+import kelvin452.game.powers as powers
 import kelvin452.game.life as life
 from collections import namedtuple
 
@@ -16,7 +16,7 @@ class FireEntity(Entity, EventConsumer):
     def __init__(self, x, y):
         super().__init__()
         self.position = Vector2(x, y)
-        self.powers = Powers()
+        self.powers = powers.Powers()
         self.timer = 0.1
         self.huge_fire_sprite = pygame.transform.scale(assets.sprite("fire.png"), (90, 90))
         self.__sprite = self.attach_component(make_sprite(self.huge_fire_sprite, (x, y)))
@@ -38,7 +38,7 @@ class FireEntity(Entity, EventConsumer):
     def _tick(self):
         self.timer -= game.delta_time
 
-        if game.world.get_single_entity(PowerupMenu) is not None:
+        if game.world.get_single_entity(powers.PowerupMenu) is not None:
             return
 
         if (self.click_allowed and pygame.mouse.get_pressed()[0]) or game.input.is_key_down(pygame.K_SPACE):
@@ -351,7 +351,7 @@ class JeanBoss(Entity, EventConsumer):
         self.sprite.dirty = 1
 
     def open_menu(self):
-        menu = PowerupMenu(game.world.get_single_entity(FireEntity).powers)
+        menu = powers.PowerupMenu(game.world.get_single_entity(FireEntity).powers)
         menu.destroyed_notifiers.append(lambda: self.menu_destroyed())
         game.world.spawn_entity(menu)
         self.phase = 2
