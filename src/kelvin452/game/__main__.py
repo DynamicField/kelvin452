@@ -8,6 +8,7 @@ import random
 from kelvin452.game.grounds import *
 from kelvin452.game.score import *
 from kelvin452.game.enemy import *
+from kelvin452.game.powers import *
 import kelvin452.game.life as life
 
 
@@ -15,7 +16,7 @@ class FireEntity(Entity, ReactsToCollisions):
     def __init__(self, x, y):
         super().__init__()
         self.position = Vector2(x, y)
-        self.shoot_cooldown = 1
+        self.powers = Powers()
         self.timer = 0.1
         self.huge_fire_sprite = pygame.transform.scale(assets.sprite("fire.png"), (90, 90))
         self.__sprite = self.attach_component(make_sprite(self.huge_fire_sprite, (x, y)))
@@ -26,11 +27,12 @@ class FireEntity(Entity, ReactsToCollisions):
 
     def _tick(self):
         self.timer -= game.delta_time
+
+        if game.world.get_single_entity(PowerupMenu) is not None:
+            return
+
         if pygame.mouse.get_pressed()[0] or game.input.is_key_down(pygame.K_SPACE):
-            if self.timer <= 0 and game.time_factor != 0:
-                dragon_entity = DragonEntity(self.position.x, self.position.y + 30)
-                game.world.spawn_entity(dragon_entity)
-                self.timer = self.shoot_cooldown
+            self.spawn_dragon()
 
         if game.input.is_key_down(pygame.K_DOWN):
             if self.position.y + 100 <= 600:
@@ -39,10 +41,17 @@ class FireEntity(Entity, ReactsToCollisions):
             if self.position.y - 10 >= 100:
                 self.add_y(-600 * game.delta_time)
 
+    def spawn_dragon(self):
+        if self.timer <= 0 and game.time_factor != 0:
+            dragon_entity = DragonEntity(self.powers.coins_pierced, self.position.x, self.position.y + 30)
+            game.world.spawn_entity(dragon_entity)
+            self.timer = self.powers.fire_rate
+
 
 class DragonEntity(Entity, ReactsToCollisions):
-    def __init__(self, x, y):
+    def __init__(self, durability, x, y):
         super().__init__()
+        self.durability = durability
         self.position = Vector2(x, y)
         huge_dragon_sprite = pygame.transform.scale(assets.sprite("dragon.png"), (60, 43))
         self.__sprite = self.attach_component(make_sprite(huge_dragon_sprite, (x, y)))
@@ -62,7 +71,10 @@ class DragonEntity(Entity, ReactsToCollisions):
                     enemy_entity = EnemyEntity()
                     game.world.spawn_entity(enemy_entity)
                 game.world.destroy_entity(other)
-                game.world.destroy_entity(self)
+                if self.durability == 1:
+                    game.world.destroy_entity(self)
+                else:
+                    self.durability -= 1
 
 
 class EnemyEntity(Entity):
@@ -179,6 +191,8 @@ class CoinSpawner(Entity):
         self.spawn_timer = 0
         self.pre_wave_counter = False
         self.pre_wave_timer = 5
+        self.paused = False
+        self.powerup_time = False
 
         self.spawn_list = []
 
@@ -209,27 +223,43 @@ class CoinSpawner(Entity):
             self.spawn_listing()
             self.wave = False
 
-        # spawning part
-        if self.spawn_timer <= 0 and self.spawn_list != []:
-            game.world.spawn_entity((self.spawn_list.pop())(0, random.randint(258, 503)))
-            self.spawn_timer = self.spawn_cooldown
-            self.pre_wave_timer = 5
-            self.pre_wave_counter = False
+        if not self.paused:
+            # spawning part
+            if self.spawn_timer <= 0 and self.spawn_list != []:
+                game.world.spawn_entity((self.spawn_list.pop())(0, random.randint(258, 503)))
+                self.spawn_timer = self.spawn_cooldown
+                self.pre_wave_timer = 5
+                self.pre_wave_counter = False
 
-        self.spawn_timer -= game.delta_time
+            self.spawn_timer -= game.delta_time
 
-        # wave ending
-        if CoinSpawner.no_coins(self) and not self.pre_wave_counter:
-            self.level += 1
-            self.spawn_list = []
-            self.spawn_points = self.level ** 2
-            self.pre_wave_counter = True
+            # wave ending
+            if CoinSpawner.no_coins(self) and not self.pre_wave_counter:
+                self.level += 1
+                self.spawn_list = []
+                self.spawn_points = self.level ** 2
+                self.pre_wave_counter = True
 
-        if self.pre_wave_counter:
-            if self.pre_wave_timer > 0:
-                self.pre_wave_timer -= game.delta_time
-            else:
-                self.wave = True
+                if self.level % 3 == 0:
+                    self.powerup_time = True
+
+            if self.pre_wave_counter:
+                if self.powerup_time and self.pre_wave_timer < 3:
+                    self.show_powerup_menu()
+                elif self.pre_wave_timer > 0:
+                    self.pre_wave_timer -= game.delta_time
+                else:
+                    self.wave = True
+
+    def show_powerup_menu(self):
+        def unpause():
+            self.paused = False
+
+        self.paused = True
+        powerup_menu = PowerupMenu(game.world.get_single_entity(FireEntity).powers)
+        powerup_menu.destroyed_notifiers.append(unpause)
+        game.world.spawn_entity(powerup_menu)
+        self.powerup_time = False
 
 
 def start_menu():
