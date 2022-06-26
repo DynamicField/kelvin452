@@ -285,12 +285,13 @@ class JeanBoss(Entity, EventConsumer):
         self.anim1_time = 0.04
         self.animation_speed_multiplier = 1  # à changer si l'animation est trop lente
         self.flip_next_frame = False
-        self.menu_opened = False
-        self.click_ready = False
+        self.click_timer = None
 
     def consume_event(self, new_event: pygame.event.Event) -> bool:
-        if self.click_ready and new_event.type == pygame.MOUSEBUTTONDOWN and \
-                self.sprite.rect.collidepoint(game.input.get_mouse_position()):
+        if self.click_timer is not None \
+                and self.phase == 1 \
+                and new_event.type == pygame.MOUSEBUTTONDOWN \
+                and self.sprite.rect.collidepoint(game.input.get_mouse_position()):
             self.open_menu()
             return True
         return False
@@ -317,8 +318,15 @@ class JeanBoss(Entity, EventConsumer):
             else:
                 if self.position.x < 500:
                     self.position.x = min(self.position.x + 600 * game.delta_time, 500)
-                elif not self.menu_opened:
-                    self.click_ready = True
+                elif self.click_timer is None:
+                    self.click_timer = 3
+
+                if self.click_timer is not None:
+                    self.click_timer -= game.delta_time
+                    if self.click_timer < 0:
+                        self.phase = 3
+                        self.flip_next_frame = True
+
         elif self.phase == 2:
             # Utiliser des keyframe à la place ?
             if self.position.x > 40:
@@ -343,7 +351,6 @@ class JeanBoss(Entity, EventConsumer):
         self.sprite.dirty = 1
 
     def open_menu(self):
-        self.menu_opened = True
         menu = PowerupMenu(game.world.get_single_entity(FireEntity).powers)
         menu.destroyed_notifiers.append(lambda: self.menu_destroyed())
         game.world.spawn_entity(menu)
@@ -351,7 +358,6 @@ class JeanBoss(Entity, EventConsumer):
         self.flip_next_frame = True
 
     def menu_destroyed(self):
-        self.menu_opened = False
         self.phase = 3
         self.flip_next_frame = True
 
