@@ -290,11 +290,8 @@ def game_start():
     fire_entity = FireEntity(1024, 315)
     game.world.spawn_entity(fire_entity)
     game.world.spawn_entity(CoinSpawner())
-    basic_score(0)
     game.world.spawn_entity(ScoreText())
-    basic_enemy(0)
     game.world.spawn_entity(EnemyText())
-    life.life = 1
     game.world.spawn_entity(life.LifeText())
 
 
