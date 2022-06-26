@@ -1,3 +1,4 @@
+from enum import Enum, auto
 from typing import Tuple, Union, Callable, List, Optional, cast
 import pygame
 from pygame.sprite import DirtySprite
@@ -9,6 +10,11 @@ from kelvin452.engine.systems.ticking import TickOrder
 from kelvin452.engine.systems.world import Entity, EntityComponent, EntityCompatibleComponent
 
 
+class RenderingGroup(Enum):
+    DEFAULT = auto()
+    UI = auto()
+
+
 class RenderingSystem(System):
     """
     Le moteur de rendu.
@@ -17,7 +23,12 @@ class RenderingSystem(System):
     def __init__(self):
         super().__init__()
         self._fps_sprite = FpsSprite()
-        self._sprites = pygame.sprite.LayeredDirty(self._fps_sprite)
+        self._sprites = pygame.sprite.LayeredDirty()
+        self._ui_sprites = pygame.sprite.LayeredUpdates(self._fps_sprite)
+        self.group_map = {
+            RenderingGroup.DEFAULT: self._sprites,
+            RenderingGroup.UI: self._ui_sprites
+        }
         self.__background: Optional[pygame.Surface] = None
         self.repaint_next_frames = 15
         self.queued_rendering_actions: List[Callable] = []
@@ -34,9 +45,16 @@ class RenderingSystem(System):
         Args:
             screen (pygame.Surface): L'écran où sont affichés les sprites
         """
+        # Repeindre tout l'écran s'il y a de l'interface. LayeredUpdates est buggé
+        # pour aucune raison.
+        # if len(self._ui_sprites.sprites()) >= 1:
+        #     self.repaint_next_frames = max(self.repaint_next_frames, 2)
+
         # Faire le rendu de l'écran entier en cas d'actions exceptionnelles
-        # (+ arrière-plan)
-        if len(self.queued_rendering_actions) > 0 or self.repaint_next_frames > 0:
+        # parce que le groupe principal doit être rerendu en entier s'il y a des
+        # sprites retirés de l'interface.
+        if len(self.queued_rendering_actions) > 0 or self.repaint_next_frames > 0 or \
+                len(self._ui_sprites.lostsprites) > 0:
             self._sprites.set_clip()
 
         # Mettre à jour les FPS
@@ -44,8 +62,8 @@ class RenderingSystem(System):
 
         # Remplir avec l'arrière plan
         self._sprites.clear(screen, self.__background)
-        # Faire le rendu de tous les sprites 
-        updated_region = self._sprites.draw(screen)
+        # Faire le rendu de tous les sprites
+        updated_region = self._sprites.draw(screen) + self._ui_sprites.draw(screen)
 
         for action in self.queued_rendering_actions:
             action()
@@ -57,21 +75,27 @@ class RenderingSystem(System):
         if self.repaint_next_frames > 0:
             self.repaint_next_frames -= 1
 
-    def add_sprite(self, sprite: pygame.sprite.Sprite):
+    def add_sprite(self, sprite: pygame.sprite.Sprite, group=None):
         """Ajoute un sprite qui sera affiché à l'écran.
 
         Args:
             sprite (pygame.sprite.Sprite): Le sprite à afficher
         """
-        self._sprites.add(sprite)
+        if group is None:
+            group = sprite.group if isinstance(sprite, KelvinSprite) else RenderingGroup.DEFAULT
 
-    def remove_sprite(self, sprite: pygame.sprite.Sprite):
+        self.group_map[group].add(sprite)
+
+    def remove_sprite(self, sprite: pygame.sprite.Sprite, group=None):
         """Retirer un sprite de l'écran
 
         Args:
             sprite (pygame.sprite.Sprite): Le sprite à retirer
         """
-        self._sprites.remove(sprite)
+        if group is None:
+            group = sprite.group if isinstance(sprite, KelvinSprite) else RenderingGroup.DEFAULT
+
+        self.group_map[group].remove(sprite)
 
     def queue_rendering_action(self, action: Callable):
         """
@@ -91,11 +115,6 @@ class RenderingSystem(System):
         self.repaint_next_frames += 1
 
 
-class Layers:
-    DEFAULT = 0
-    UI = 300
-
-
 EMPTY_SURFACE = pygame.Surface((0, 0))
 
 
@@ -104,16 +123,17 @@ class KelvinSprite(EntityCompatibleComponent, DirtySprite):
     image: pygame.surface.Surface  # Bye bye optional
 
     def __init__(self, image: pygame.surface.Surface, location: Tuple[float, float] = (0, 0),
-                 auto_update=True, layer=Layers.DEFAULT):
+                 auto_update=True, layer=0, group=RenderingGroup.DEFAULT):
         super().__init__()
         self.image = image
         self.rect = image.get_rect().move(*location)
         self.layer = layer
         self.blendmode = pygame.BLEND_ALPHA_SDL2  # Blend mode pour plus de performance
+        self.group = group
         self.__auto_update = auto_update
         self.__position = pygame.Vector2(self.rect.x, self.rect.y)
         self.dirty = 1
-        game.ticking.add_tick_function(lambda: self._update_dirty_state(), TickOrder.POST_ENTITY).attach_to(self)
+        game.ticking.add_tick_function(lambda: self._update_dirty_state(), TickOrder.PRE_RENDER).attach_to(self)
 
     @property
     def position(self):
@@ -157,6 +177,7 @@ class KelvinSprite(EntityCompatibleComponent, DirtySprite):
                 self.dirty = 1
         if self.dirty:
             self.rect.x, self.rect.y = self.position.xy
+
 
 class FpsSprite(pygame.sprite.DirtySprite):
     empty = pygame.surface.Surface((0, 0))

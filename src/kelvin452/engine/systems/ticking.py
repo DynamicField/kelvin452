@@ -8,6 +8,7 @@ from kelvin452.engine.systems.base import System, Component
 class TickOrder(Enum):
     ENTITY = auto()
     POST_ENTITY = auto()
+    PRE_RENDER = auto()
     POST_RENDER = auto()
 
 

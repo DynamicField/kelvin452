@@ -144,10 +144,6 @@ class PowerupMenu(Entity, EventConsumer):
     def get_priority(self):
         return 300  # UI
 
-    def _tick(self):
-        if game.input.is_key_down(pygame.K_ESCAPE):
-            self.destroy()
-
 
 if __name__ == "__main__":
     def example_game_start():

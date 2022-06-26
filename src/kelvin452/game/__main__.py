@@ -9,9 +9,10 @@ from kelvin452.game.score import *
 from kelvin452.game.enemy import *
 from kelvin452.game.powers import *
 import kelvin452.game.life as life
+from collections import namedtuple
 
 
-class FireEntity(Entity, ReactsToCollisions):
+class FireEntity(Entity, EventConsumer):
     def __init__(self, x, y):
         super().__init__()
         self.position = Vector2(x, y)
@@ -20,9 +21,19 @@ class FireEntity(Entity, ReactsToCollisions):
         self.huge_fire_sprite = pygame.transform.scale(assets.sprite("fire.png"), (90, 90))
         self.__sprite = self.attach_component(make_sprite(self.huge_fire_sprite, (x, y)))
         self.__collision = self.attach_component(CollisionHitBox(follow_sprite_rect=True, draw_box=False))
+        self.click_allowed = False
 
     def add_y(self, add):  # add is the value we add in position y value, for example y == 10, add_y(10) put y at 20
         self.position.y += add
+
+    def consume_event(self, new_event: pygame.event.Event) -> bool:
+        if new_event.type == pygame.MOUSEBUTTONDOWN:
+            self.click_allowed = True
+            return True
+        return False
+
+    def get_priority(self):
+        return -1
 
     def _tick(self):
         self.timer -= game.delta_time
@@ -30,8 +41,10 @@ class FireEntity(Entity, ReactsToCollisions):
         if game.world.get_single_entity(PowerupMenu) is not None:
             return
 
-        if pygame.mouse.get_pressed()[0] or game.input.is_key_down(pygame.K_SPACE):
+        if (self.click_allowed and pygame.mouse.get_pressed()[0]) or game.input.is_key_down(pygame.K_SPACE):
             self.spawn_dragon()
+        else:
+            self.click_allowed = False
 
         if game.input.is_key_down(pygame.K_DOWN):
             if self.position.y + 100 <= 600:
@@ -239,8 +252,7 @@ class CoinSpawner(Entity):
                 self.spawn_points = self.level ** 2
                 self.pre_wave_counter = True
 
-                if self.level % 3 == 0:
-                    self.powerup_time = True
+                self.powerup_time = True
 
             if self.pre_wave_counter:
                 if self.powerup_time and self.pre_wave_timer < 3:
@@ -255,10 +267,93 @@ class CoinSpawner(Entity):
             self.paused = False
 
         self.paused = True
-        powerup_menu = PowerupMenu(game.world.get_single_entity(FireEntity).powers)
-        powerup_menu.destroyed_notifiers.append(unpause)
-        game.world.spawn_entity(powerup_menu)
+        jean = JeanBoss()
+        jean.destroyed_notifiers.append(unpause)
+        game.world.spawn_entity(jean)
         self.powerup_time = False
+
+
+class JeanBoss(Entity, EventConsumer):
+    Keyframe = namedtuple('Phase', ['start', 'duration', 'end'])
+
+    def __init__(self):
+        super().__init__()
+        self.position = Vector2(-128, (game.viewport.y - 128) / 2)
+        resized_image = pygame.transform.scale(assets.sprite("boss.png"), (128, 128))
+        self.sprite = self.attach_component(KelvinSprite(resized_image))
+        self.phase = 1
+        self.anim1_time = 0.04
+        self.animation_speed_multiplier = 1  # à changer si l'animation est trop lente
+        self.flip_next_frame = False
+        self.menu_opened = False
+        self.click_ready = False
+
+    def consume_event(self, new_event: pygame.event.Event) -> bool:
+        if self.click_ready and new_event.type == pygame.MOUSEBUTTONDOWN and \
+                self.sprite.rect.collidepoint(game.input.get_mouse_position()):
+            self.open_menu()
+            return True
+        return False
+
+    def _tick(self):
+        if self.flip_next_frame:
+            self.flip()
+            self.flip_next_frame = False
+
+        if self.phase == 1:
+            self.anim1_time += game.delta_time * self.animation_speed_multiplier
+            k1 = self.keyframe(None, 0.5)  # Pause du début
+            k2 = self.keyframe(k1, 0.8)  # Avancée et reculée
+            k3 = self.keyframe(k2, 0.4)  # Pause avant de revenir pour de vrai
+            if self.anim1_time < k1.end:
+                pass  # Rien
+            elif self.anim1_time < k2.end:
+                # https://www.desmos.com/calculator/5v6nfruhwh
+                time_from_start = (self.anim1_time - k2.start)
+                self.position.x \
+                    = -128 + 100 * min(-((2.2 * (time_from_start * (1 / k2.duration)) - 1.095) ** 2) + 1.20, 1)
+            elif self.anim1_time < k3.end:
+                pass  # Rien
+            else:
+                if self.position.x < 500:
+                    self.position.x = min(self.position.x + 600 * game.delta_time, 500)
+                elif not self.menu_opened:
+                    self.click_ready = True
+        elif self.phase == 2:
+            # Utiliser des keyframe à la place ?
+            if self.position.x > 40:
+                self.position.x = max(self.position.x - 400 * game.delta_time, 40)
+                if self.position.x <= 40:
+                    self.flip()
+        elif self.phase == 3:
+            if self.position.x > -200:
+                self.position.x = max(self.position.x - 400 * game.delta_time, -200)
+            else:
+                self.destroy()  # bye !
+
+    # Clé d'animation
+    def keyframe(self, prev, duration) -> Keyframe:
+        if prev is None:
+            return JeanBoss.Keyframe(0, duration, duration)
+        else:
+            return JeanBoss.Keyframe(prev[2], duration, prev[2] + duration)
+
+    def flip(self):
+        self.sprite.image = pygame.transform.flip(self.sprite.image, flip_x=True, flip_y=False)
+        self.sprite.dirty = 1
+
+    def open_menu(self):
+        self.menu_opened = True
+        menu = PowerupMenu(game.world.get_single_entity(FireEntity).powers)
+        menu.destroyed_notifiers.append(lambda: self.menu_destroyed())
+        game.world.spawn_entity(menu)
+        self.phase = 2
+        self.flip_next_frame = True
+
+    def menu_destroyed(self):
+        self.menu_opened = False
+        self.phase = 3
+        self.flip_next_frame = True
 
 
 def start_menu():

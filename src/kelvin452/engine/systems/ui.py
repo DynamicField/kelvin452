@@ -7,7 +7,7 @@ import kelvin452.engine.fonts as fonts
 from kelvin452.engine.game import game
 from kelvin452.engine.systems.base import Component
 from kelvin452.engine.systems.ticking import TickOrder
-from kelvin452.engine.systems.rendering import KelvinSprite, EMPTY_SURFACE, Layers
+from kelvin452.engine.systems.rendering import KelvinSprite, EMPTY_SURFACE, RenderingGroup
 
 
 class UIElement(Component):
@@ -70,7 +70,7 @@ class UIElement(Component):
     def _governed_element_removed(self, element: 'UIElement'):
         pass
 
-    def update_depth(self, layer=Layers.UI):
+    def update_depth(self, layer=0):
         self._change_layer(layer)
         for element in self.governed_elements:
             element.update_depth(layer + 1)
@@ -93,7 +93,9 @@ class UIElement(Component):
 class TextBlock(UIElement):
     def __init__(self, text="", font=fonts.default_font, color=(255, 255, 255), background=None):
         super().__init__()
-        self.sprite = self.attach_component(KelvinSprite(EMPTY_SURFACE, auto_update=False, layer=Layers.UI))
+        self.sprite = self.attach_component(
+            KelvinSprite(EMPTY_SURFACE, auto_update=False, group=RenderingGroup.UI))
+
         self.__text = text
         self.__font = font
         self.__color = color
@@ -176,7 +178,7 @@ class Button(UIElement, Generic[U]):
         super().__init__()
         self.__background_image = background
         self.__background_sprite = self.attach_component(
-            KelvinSprite(pygame.transform.scale(background, size), layer=Layers.UI))
+            KelvinSprite(pygame.transform.scale(background, size), group=RenderingGroup.UI))
         self.image_dirty = False
         self.child = child
         self.__last_size = size
@@ -252,7 +254,7 @@ class Image(UIElement):
     def __init__(self, image: pygame.Surface, size: Optional[Vector2] = None):
         super().__init__()
         self.__image = image
-        self.__sprite = self.attach_component(KelvinSprite(image, layer=Layers.UI))
+        self.__sprite = self.attach_component(KelvinSprite(image, group=RenderingGroup.UI))
         self.__size = size
         self.__last_size = size
         self._update_dirty_state()

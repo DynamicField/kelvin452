@@ -80,6 +80,7 @@ class Game:
             self.ticking.run_ticks(TickOrder.ENTITY)  # Lancer le tick des entités
             self.ticking.run_ticks(TickOrder.POST_ENTITY)  # Lancer le tick d'après les entités
             self.collision.refresh_collisions()  # Vérifier les collisions
+            self.ticking.run_ticks(TickOrder.PRE_RENDER)  # Lancer le tick d'avant le rendu
             self.renderer.render(screen)  # Faire le rendu des sprites.
             self.ticking.run_ticks(TickOrder.POST_RENDER)  # Lancer le tick après le rendu
 

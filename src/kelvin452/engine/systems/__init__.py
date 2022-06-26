@@ -1,5 +1,5 @@
 from .base import System, Component
-from .rendering import RenderingSystem, KelvinSprite, make_sprite, Layers, EMPTY_SURFACE
+from .rendering import RenderingSystem, KelvinSprite, make_sprite, EMPTY_SURFACE, RenderingGroup
 from .world import WorldSystem, Entity, EntityCompatibleComponent, EntityComponent
 from .ticking import TickingSystem, TickOrder, TickEntry
 from .event import EventSystem, EventConsumer
