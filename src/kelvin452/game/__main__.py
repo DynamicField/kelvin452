@@ -1,13 +1,12 @@
 import pygame.cursors
 import pygame.transform
 
-
 from kelvin452.engine import *
 import random
-
+from math import sqrt
 from kelvin452.game.grounds import *
 from kelvin452.game.score import *
-from kelvin452.game.enemy import *
+import kelvin452.game.enemy as enemy
 from kelvin452.game.powers import *
 import kelvin452.game.life as life
 
@@ -66,7 +65,7 @@ class DragonEntity(Entity, ReactsToCollisions):
         if type(other) in CoinSpawner.get_coin_list():
             if hasattr(other, 'reward'):
                 add_score(other.reward)
-                modify_enemy(other.reward)
+                enemy.modify_enemy(other.reward)
                 for _ in range(other.reward):
                     enemy_entity = EnemyEntity()
                     game.world.spawn_entity(enemy_entity)
@@ -183,9 +182,10 @@ class CoinSpawner(Entity):
         super().__init__()
 
         # self.coins_list : [(name, cost, probability / 100), (name, cost, probability / 100)]
-
         self.level = 1
-        self.spawn_points = self.level ** 2  # the number of points the game will use by wave to spawn coins
+
+        # the number of points the game will use by wave to spawn coins
+        self.spawn_points = self.compute_spawn_point()
         self.wave = True
         self.spawn_cooldown = 0.3
         self.spawn_timer = 0
@@ -195,6 +195,11 @@ class CoinSpawner(Entity):
         self.powerup_time = False
 
         self.spawn_list = []
+
+    def compute_spawn_point(self):
+        # it calculates the numbers of points who will use by wave to spawn coins
+        phi = (1 + sqrt(5)) / 2
+        return (1 / sqrt(5)) * ((phi ** self.level) - (-1 / phi) ** self.level)
 
     def spawn_listing(self):
         # time to choose the coins who will spawn
@@ -237,11 +242,10 @@ class CoinSpawner(Entity):
             if CoinSpawner.no_coins(self) and not self.pre_wave_counter:
                 self.level += 1
                 self.spawn_list = []
-                self.spawn_points = self.level ** 2
+                self.spawn_points = self.compute_spawn_point()
                 self.pre_wave_counter = True
 
-                if self.level % 3 == 0:
-                    self.powerup_time = True
+                self.powerup_time = True
 
             if self.pre_wave_counter:
                 if self.powerup_time and self.pre_wave_timer < 3:
@@ -260,6 +264,18 @@ class CoinSpawner(Entity):
         powerup_menu.destroyed_notifiers.append(unpause)
         game.world.spawn_entity(powerup_menu)
         self.powerup_time = False
+
+
+class EnemyCleaner(Entity):
+    def __init__(self):
+        super().__init__()
+
+    def _tick(self):
+        self.overflow()
+
+    def overflow(self):
+        for excess_enemy in game.world.get_entities(EnemyEntity)[enemy.enemy:]:
+            game.world.destroy_entity(excess_enemy)
 
 
 def start_menu():
@@ -322,8 +338,9 @@ def game_start():
     game.world.spawn_entity(fire_entity)
     game.world.spawn_entity(CoinSpawner())
     game.world.spawn_entity(ScoreText())
-    game.world.spawn_entity(EnemyText())
+    game.world.spawn_entity(enemy.EnemyText())
     game.world.spawn_entity(life.LifeText())
+    game.world.spawn_entity(EnemyCleaner())
 
 
 def launch_game():

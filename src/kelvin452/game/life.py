@@ -34,7 +34,7 @@ class LifeText(Entity):
     def _tick(self):
         global life
         if life == 0:
-            end_game()
+            main.end_game()
         if self.previous_life != life:
             self.text_sprite.image = default_font.render(f"LIFE : {life}", True, (255, 0, 0))
 

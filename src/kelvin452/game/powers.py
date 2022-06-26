@@ -13,9 +13,9 @@ class Powers:
 
     def __init__(self):
         self.coins_pierced = 1
-        self.coins_pierced_upgrade_cost = 5
-        self.fire_rate = 0.82
-        self.fire_rate_upgrade_cost = 3
+        self.coins_pierced_upgrade_cost = 50
+        self.fire_rate = 1
+        self.fire_rate_upgrade_cost = 1
 
     def next_fire_rate_upgrade(self):
         return Powers.Upgrade(self.fire_rate, self.fire_rate * 0.78, self.fire_rate_upgrade_cost)
