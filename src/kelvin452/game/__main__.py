@@ -7,7 +7,7 @@ import random
 from math import sqrt
 from kelvin452.game.grounds import *
 from kelvin452.game.score import *
-from kelvin452.game.enemy import *
+import enemy
 import kelvin452.game.powers as powers
 import kelvin452.game.life as life
 from collections import namedtuple
@@ -79,10 +79,11 @@ class DragonEntity(Entity, ReactsToCollisions):
         if type(other) in CoinSpawner.get_coin_list():
             if hasattr(other, 'reward'):
                 add_score(other.reward)
-                modify_enemy(other.reward)
-                for _ in range(other.reward):
+                enemy.modify_enemy(other.reward)
+                print(enemy)
+                """for _ in range(other.reward):
                     enemy_entity = EnemyEntity()
-                    game.world.spawn_entity(enemy_entity)
+                    game.world.spawn_entity(enemy_entity)"""
                 game.world.destroy_entity(other)
                 if self.durability == 1:
                     game.world.destroy_entity(self)
@@ -105,6 +106,22 @@ class EnemyEntity(Entity):
                 self.position.y += (602 - self.huge_y - self.position.y)
             else:
                 self.position.y += 300 * game.delta_time
+
+
+class EnemySpawner(Entity):
+    def get_enemy_number(self):
+        return len(game.world.get_entities(EnemyEntity))
+
+    def _tick(self):
+        self.delta_enemies = self.get_enemy_number() - enemy.enemy
+        print(self.delta_enemies, self.get_enemy_number(), enemy.enemy)
+        if self.delta_enemies < 0:
+            for i in range(self.delta_enemies, 0):
+                enemy_entity = EnemyEntity()
+                game.world.spawn_entity(enemy_entity)
+        if self.delta_enemies > 0:
+            for i in range(self.delta_enemies):
+                game.world.destroy_entity(EnemyEntity)
 
 
 class ClassicCoinEntity(Entity):
@@ -429,7 +446,8 @@ def game_start():
     game.world.spawn_entity(fire_entity)
     game.world.spawn_entity(CoinSpawner())
     game.world.spawn_entity(ScoreText())
-    game.world.spawn_entity(EnemyText())
+    game.world.spawn_entity(EnemySpawner())
+    game.world.spawn_entity(enemy.EnemyText())
     game.world.spawn_entity(life.LifeText())
 
 

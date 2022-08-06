@@ -2,7 +2,7 @@ import pygame
 from kelvin452.engine.fonts import default_font
 from kelvin452.engine import *
 
-enemy = 0
+enemy = 10
 
 
 def basic_enemy(value):
@@ -15,10 +15,11 @@ def modify_enemy(amount):
     enemy += amount
 
 
+
 class EnemyText(Entity):
     def __init__(self, x=1161, y=612):
         super().__init__()
-        basic_enemy(0)
+        basic_enemy(10)
         self.position = Vector2(x, y)
         self.previous_enemy = -1
         self.survive_game_over = False
