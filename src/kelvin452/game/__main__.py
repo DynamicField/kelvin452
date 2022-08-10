@@ -7,7 +7,7 @@ import random
 from math import sqrt
 from kelvin452.game.grounds import *
 from kelvin452.game.score import *
-from kelvin452.game.enemy import *
+import kelvin452.game.enemy as enemy_module
 import kelvin452.game.powers as powers
 import kelvin452.game.life as life
 from collections import namedtuple
@@ -79,10 +79,7 @@ class DragonEntity(Entity, ReactsToCollisions):
         if type(other) in CoinSpawner.get_coin_list():
             if hasattr(other, 'reward'):
                 add_score(other.reward)
-                modify_enemy(other.reward)
-                for _ in range(other.reward):
-                    enemy_entity = EnemyEntity()
-                    game.world.spawn_entity(enemy_entity)
+                enemy_module.modify_enemy(other.reward)
                 game.world.destroy_entity(other)
                 if self.durability == 1:
                     game.world.destroy_entity(self)
@@ -429,7 +426,7 @@ def game_start():
     game.world.spawn_entity(fire_entity)
     game.world.spawn_entity(CoinSpawner())
     game.world.spawn_entity(ScoreText())
-    game.world.spawn_entity(EnemyText())
+    game.world.spawn_entity(enemy_module.EnemyText())
     game.world.spawn_entity(life.LifeText())
 
 

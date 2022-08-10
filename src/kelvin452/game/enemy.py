@@ -3,16 +3,39 @@ from kelvin452.engine.fonts import default_font
 from kelvin452.engine import *
 
 enemy = 0
+max_enemies_on_screen = 100
 
 
 def basic_enemy(value):
-    global enemy
-    enemy = value
+    modify_enemy(value - enemy)
 
 
 def modify_enemy(amount):
+    import kelvin452.game.__main__ as main
+    import random
+
     global enemy
+    if amount < -enemy:  # Prevent negative values
+        amount = -enemy
     enemy += amount
+
+    if amount > 0:
+        displayed_enemies = len(game.world.get_entities(main.EnemyEntity))
+        for _ in range(amount):
+            if displayed_enemies > max_enemies_on_screen:
+                random_enemy = random.choice(game.world.get_entities(main.EnemyEntity))
+                game.world.destroy_entity(random_enemy)
+            else:
+                displayed_enemies += 1
+
+            enemy_entity = main.EnemyEntity()
+            game.world.spawn_entity(enemy_entity)
+    elif amount < 0:
+        for _ in range(-amount):
+            enemies = game.world.get_entities(main.EnemyEntity)
+            if len(enemies) == 0:
+                break
+            game.world.destroy_entity(enemies[0])
 
 
 class EnemyText(Entity):
