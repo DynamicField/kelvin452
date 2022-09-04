@@ -63,10 +63,10 @@ class FireEntity(Entity, EventConsumer):
 
 
 class DragonEntity(Entity, ReactsToCollisions):
-    def __init__(self, durability, damages, x, y):
+    def __init__(self, durability, damage, x, y):
         super().__init__()
         self.durability = durability
-        self.damages = damages
+        self.damage = damage
         self.position = Vector2(x, y)
         huge_dragon_sprite = pygame.transform.scale(assets.sprite("dragon.png"), (60, 43))
         self.__sprite = self.attach_component(make_sprite(huge_dragon_sprite, (x, y)))
@@ -80,7 +80,7 @@ class DragonEntity(Entity, ReactsToCollisions):
     def _on_collide(self, other: Entity):
         if type(other) in CoinSpawner.get_coin_list():
             if hasattr(other, 'reward'):
-                other.dragon_touch(self.damages)
+                other.dragon_touch(self.damage)
                 if self.durability == 1:
                     game.world.destroy_entity(self)
                 else:
