@@ -16,6 +16,8 @@ class Powers:
         self.coins_pierced_upgrade_cost = 50
         self.fire_rate = 1
         self.fire_rate_upgrade_cost = 10
+        self.damage = 1
+        self.damage_upgrade_cost = 96
 
     def next_fire_rate_upgrade(self):
         return Powers.Upgrade(self.fire_rate, self.fire_rate * 0.78, self.fire_rate_upgrade_cost)
@@ -42,6 +44,19 @@ class Powers:
             self.coins_pierced_upgrade_cost += 15
             self.coins_pierced_upgrade_cost **= 1.15
             self.coins_pierced_upgrade_cost = int(self.coins_pierced_upgrade_cost)
+
+    def next_damage_upgrade(self):
+        return Powers.Upgrade(self.damage, self.damage + 1, self.damage_upgrade_cost)
+
+    def upgrade_damage(self):
+        upgrade = self.next_damage_upgrade()
+        if upgrade.cost <= enemy_module.enemy:
+            enemy_module.modify_enemy(-upgrade.cost)
+            self.damage = upgrade.new_value
+
+            self.damage_upgrade_cost += 43
+            self.damage_upgrade_cost **= 1.15
+            self.damage_upgrade_cost = int(self.damage_upgrade_cost)
 
 
 def _make_filled_surface(dimensions, color):
@@ -79,7 +94,15 @@ class PowerupMenu(Entity, EventConsumer):
                    PowerupMenu.GREEN_BUTTON_SURFACE,
                    TextBlock()))
         self.fire_rate_upgrade_buy_button.on_click = self.upgrade_callback(Powers.upgrade_fire_rate)
-        self.place_element_centered(self.fire_rate_upgrade_buy_button, 340)
+        self.place_element_centered(self.fire_rate_upgrade_buy_button, 280)
+
+        self.damage_upgrade_text = self.background.govern(TextBlock())
+        self.damage_upgrade_buy_button: Button[TextBlock] = self.background.govern(
+            Button(PowerupMenu.BUY_BUTTON_SIZE,
+                   PowerupMenu.GREEN_BUTTON_SURFACE,
+                   TextBlock()))
+        self.damage_upgrade_buy_button.on_click = self.upgrade_callback(Powers.upgrade_damage)
+        self.place_element_centered(self.damage_upgrade_buy_button, 440)
 
         self.enemy_text = self.background.govern(TextBlock())
         self.close_button = self.background.govern(
@@ -105,8 +128,15 @@ class PowerupMenu(Entity, EventConsumer):
         self.fire_rate_upgrade_text.text \
             = f"CADENCE DE TIR : {fire_rate_old:.2f}/sec -> {fire_rate_new:.2f}/sec | COÛTE {fire_rate_cost} ennemis"
         self.fire_rate_upgrade_text.force_update()
-        self.place_element_centered(self.fire_rate_upgrade_text, 300)
+        self.place_element_centered(self.fire_rate_upgrade_text, 240)
         self.update_upgrade_button(self.fire_rate_upgrade_buy_button, fire_rate_cost)
+
+        damage_old, damage_new, damage_cost = self.powers.next_damage_upgrade()
+        self.damage_upgrade_text.text \
+            = f"DAMAGE : {damage_old} -> {damage_new} | COSTS {damage_cost} enemies"
+        self.damage_upgrade_text.force_update()
+        self.place_element_centered(self.damage_upgrade_text, 400)
+        self.update_upgrade_button(self.damage_upgrade_buy_button, damage_cost)
 
         self.enemy_text.text = f"ENNEMIS : {enemy_module.enemy}"
         self.enemy_text.force_update()

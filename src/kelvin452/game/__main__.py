@@ -56,15 +56,17 @@ class FireEntity(Entity, EventConsumer):
 
     def spawn_dragon(self):
         if self.timer <= 0 and game.time_factor != 0:
-            dragon_entity = DragonEntity(self.powers.coins_pierced, self.position.x, self.position.y + 30)
+            dragon_entity = DragonEntity(self.powers.coins_pierced, self.powers.damages, self.position.x,
+                                         self.position.y + 30)
             game.world.spawn_entity(dragon_entity)
             self.timer = self.powers.fire_rate
 
 
 class DragonEntity(Entity, ReactsToCollisions):
-    def __init__(self, durability, x, y):
+    def __init__(self, durability, damage, x, y):
         super().__init__()
         self.durability = durability
+        self.damage = damage
         self.position = Vector2(x, y)
         huge_dragon_sprite = pygame.transform.scale(assets.sprite("dragon.png"), (60, 43))
         self.__sprite = self.attach_component(make_sprite(huge_dragon_sprite, (x, y)))
@@ -78,9 +80,7 @@ class DragonEntity(Entity, ReactsToCollisions):
     def _on_collide(self, other: Entity):
         if type(other) in CoinSpawner.get_coin_list():
             if hasattr(other, 'reward'):
-                add_score(other.reward)
-                enemy_module.modify_enemy(other.reward)
-                game.world.destroy_entity(other)
+                other.dragon_touch(self.damage)
                 if self.durability == 1:
                     game.world.destroy_entity(self)
                 else:
@@ -107,6 +107,7 @@ class EnemyEntity(Entity):
 class ClassicCoinEntity(Entity):
     def __init__(self, x, y):
         super().__init__()
+        self.pv = CoinSpawner.get_coin_pv(ClassicCoinEntity)
         self.reward = 1
         self.position = Vector2(x, y)
         self.size = random.randint(32, 64)
@@ -114,7 +115,15 @@ class ClassicCoinEntity(Entity):
         self.__sprite = self.attach_component(make_sprite(self.huge_coin_sprite, (self.position.x, self.position.y)))
         self.__collision = self.attach_component(CollisionHitBox(follow_sprite_rect=True, draw_box=False))
 
+    def dragon_touch(self, damage):
+        self.pv -= damage
+
     def _tick(self):
+        if self.pv <= 0:
+            add_score(self.reward)
+            enemy_module.modify_enemy(self.reward)
+            self.destroy()
+
         self.position.x += 200 * game.delta_time
         if self.position.x > 1280:
             game.world.destroy_entity(self)
@@ -124,6 +133,7 @@ class ClassicCoinEntity(Entity):
 class WizardCoinEntity(Entity):
     def __init__(self, x, y):
         super().__init__()
+        self.pv = CoinSpawner.get_coin_pv(WizardCoinEntity)
         self.reward = 2
         self.position = Vector2(x, y)
         self.position_backup = self.position
@@ -134,7 +144,14 @@ class WizardCoinEntity(Entity):
         self.__sprite = self.attach_component(make_sprite(self.huge_coin_sprite, (self.position.x, self.position.y)))
         self.__collision = self.attach_component((CollisionHitBox(follow_sprite_rect=True, draw_box=False)))
 
+    def dragon_touch(self, damage):
+        self.pv -= damage
+
     def _tick(self):
+        if self.pv <= 0:
+            add_score(self.reward)
+            enemy_module.modify_enemy(self.reward)
+            self.destroy()
         if self.position.x >= 575:
             self.timer -= game.delta_time
             if self.timer <= 0:
@@ -179,8 +196,44 @@ class WizardProjectileEntity(Entity, ReactsToCollisions):
             game.world.destroy_entity(self)
 
 
+class KnightCoinEntity(Entity):
+    def __init__(self, x, y):
+        super().__init__()
+        self.pv = CoinSpawner.get_coin_pv(KnightCoinEntity)
+        self.armored = True
+        self.reward = 3
+        self.position = Vector2(x, y)
+        self.size = random.randint(32, 64)
+        self.huge_coin_sprite = pygame.transform.scale(assets.sprite("armored_knight_coin.png"), (self.size, self.size))
+        self.__sprite = self.attach_component(make_sprite(self.huge_coin_sprite, (self.position.x, self.position.y)))
+        self.__collision = self.attach_component((CollisionHitBox(follow_sprite_rect=True, draw_box=False)))
+
+    def dragon_touch(self, damage):
+        self.pv -= damage
+
+    def _tick(self):
+        if self.pv <= 0:
+            add_score(self.reward)
+            enemy_module.modify_enemy(self.reward)
+            self.destroy()
+
+        if self.pv <= CoinSpawner.get_coin_pv(KnightCoinEntity) // 2 and self.armored:
+            self.huge_coin_sprite = pygame.transform.scale(assets.sprite("naked_knight_coin.png"),
+                                                           (self.size, self.size))
+            self.__sprite = self.attach_component(
+                make_sprite(self.huge_coin_sprite, (self.position.x, self.position.y)))
+            self.armored = False
+
+        self.position.x += 150 * game.delta_time
+        if self.position.x > 1280:
+            game.world.destroy_entity(self)
+            life.modify_life(-1)
+
+
 class CoinSpawner(Entity):
-    coins_list_setup = [(ClassicCoinEntity, 1, 100 / 100), (WizardCoinEntity, 2, 80 / 100)]
+    # [(name, cost, probability / 100), pv]
+    coins_list_setup = [(ClassicCoinEntity, 1, 100 / 100, 1), (WizardCoinEntity, 2, 80 / 100, 1),
+                        (KnightCoinEntity, 5, 75 / 100, 2)]
 
     @staticmethod
     def get_coin_list():
@@ -189,10 +242,16 @@ class CoinSpawner(Entity):
             coin_list.append(CoinSpawner.coins_list_setup[i][0])
         return coin_list
 
+    @staticmethod
+    def get_coin_pv(name):
+        for i in range(len(CoinSpawner.coins_list_setup)):
+            if CoinSpawner.coins_list_setup[i][0] == name:
+                return CoinSpawner.coins_list_setup[i][3]
+
     def __init__(self):
         super().__init__()
 
-        # self.coins_list : [(name, cost, probability / 100), (name, cost, probability / 100)]
+        # self.coins_list : [(name, cost, probability / 100), pv , (name, pv, cost, probability / 100), pv]
         self.level = 1
 
         # the number of points the game will use by wave to spawn coins
