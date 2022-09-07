@@ -7,6 +7,7 @@ import random
 from math import sqrt
 from kelvin452.game.grounds import *
 from kelvin452.game.score import *
+import kelvin452.game.level as level
 import kelvin452.game.enemy as enemy_module
 import kelvin452.game.powers as powers
 import kelvin452.game.life as life
@@ -56,7 +57,7 @@ class FireEntity(Entity, EventConsumer):
 
     def spawn_dragon(self):
         if self.timer <= 0 and game.time_factor != 0:
-            dragon_entity = DragonEntity(self.powers.coins_pierced, self.powers.damages, self.position.x,
+            dragon_entity = DragonEntity(self.powers.coins_pierced, self.powers.damage, self.position.x,
                                          self.position.y + 30)
             game.world.spawn_entity(dragon_entity)
             self.timer = self.powers.fire_rate
@@ -252,7 +253,6 @@ class CoinSpawner(Entity):
         super().__init__()
 
         # self.coins_list : [(name, cost, probability / 100), pv , (name, pv, cost, probability / 100), pv]
-        self.level = 1
 
         # the number of points the game will use by wave to spawn coins
         self.spawn_points = self.compute_spawn_point()
@@ -269,7 +269,7 @@ class CoinSpawner(Entity):
     def compute_spawn_point(self):
         # it calculates the numbers of points who will use by wave to spawn coins
         phi = (1 + sqrt(5)) / 2
-        return (1 / sqrt(5)) * ((phi ** self.level) - (-1 / phi) ** self.level)
+        return (1 / sqrt(5)) * ((phi ** level.level) - (-1 / phi) ** level.level)
 
     def spawn_listing(self):
         # time to choose the coins who will spawn
@@ -293,6 +293,11 @@ class CoinSpawner(Entity):
                 return False
         return True
 
+    def post_wave(self):
+        ...
+
+    # .
+
     def _tick(self):
         if self.wave:
             self.spawn_listing()
@@ -303,19 +308,21 @@ class CoinSpawner(Entity):
             if self.spawn_timer <= 0 and self.spawn_list != []:
                 game.world.spawn_entity((self.spawn_list.pop())(0, random.randint(258, 503)))
                 self.spawn_timer = self.spawn_cooldown
-                self.pre_wave_timer = 5
+                self.pre_wave_timer = 4
                 self.pre_wave_counter = False
 
             self.spawn_timer -= game.delta_time
 
             # wave ending
             if CoinSpawner.no_coins(self) and not self.pre_wave_counter:
-                self.level += 1
+                # shit technique to force the boss to come after the third level
+                if level.level % 3 == 0:
+                    self.powerup_time = True
+
+                print(f"level = {level.level}")
                 self.spawn_list = []
                 self.spawn_points = self.compute_spawn_point()
                 self.pre_wave_counter = True
-
-                self.powerup_time = True
 
             if self.pre_wave_counter:
                 if self.powerup_time and self.pre_wave_timer < 3:
@@ -323,6 +330,7 @@ class CoinSpawner(Entity):
                 elif self.pre_wave_timer > 0:
                     self.pre_wave_timer -= game.delta_time
                 else:
+                    level.add_level()
                     self.wave = True
 
     def show_powerup_menu(self):
@@ -401,6 +409,7 @@ class JeanBoss(Entity, EventConsumer):
                 self.position.x = max(self.position.x - 400 * game.delta_time, -200)
             else:
                 self.destroy()  # bye !
+
 
     # Clé d'animation
     def keyframe(self, prev, duration) -> Keyframe:
@@ -485,6 +494,7 @@ def game_start():
     game.world.spawn_entity(fire_entity)
     game.world.spawn_entity(CoinSpawner())
     game.world.spawn_entity(ScoreText())
+    game.world.spawn_entity(level.LevelText())
     game.world.spawn_entity(enemy_module.EnemyText())
     game.world.spawn_entity(life.LifeText())
 
