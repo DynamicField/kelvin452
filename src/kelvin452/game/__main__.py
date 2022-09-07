@@ -56,7 +56,7 @@ class FireEntity(Entity, EventConsumer):
 
     def spawn_dragon(self):
         if self.timer <= 0 and game.time_factor != 0:
-            dragon_entity = DragonEntity(self.powers.coins_pierced, self.powers.damages, self.position.x,
+            dragon_entity = DragonEntity(self.powers.coins_pierced, self.powers.damage, self.position.x,
                                          self.position.y + 30)
             game.world.spawn_entity(dragon_entity)
             self.timer = self.powers.fire_rate
@@ -315,7 +315,8 @@ class CoinSpawner(Entity):
                 self.spawn_points = self.compute_spawn_point()
                 self.pre_wave_counter = True
 
-                self.powerup_time = True
+                if self.level % 3 == 0:
+                    self.powerup_time = True
 
             if self.pre_wave_counter:
                 if self.powerup_time and self.pre_wave_timer < 3:
