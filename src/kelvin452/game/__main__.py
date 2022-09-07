@@ -7,6 +7,7 @@ import random
 from math import sqrt
 from kelvin452.game.grounds import *
 from kelvin452.game.score import *
+import kelvin452.game.level as level
 import kelvin452.game.enemy as enemy_module
 import kelvin452.game.powers as powers
 import kelvin452.game.life as life
@@ -252,7 +253,6 @@ class CoinSpawner(Entity):
         super().__init__()
 
         # self.coins_list : [(name, cost, probability / 100), pv , (name, pv, cost, probability / 100), pv]
-        self.level = 1
 
         # the number of points the game will use by wave to spawn coins
         self.spawn_points = self.compute_spawn_point()
@@ -269,7 +269,7 @@ class CoinSpawner(Entity):
     def compute_spawn_point(self):
         # it calculates the numbers of points who will use by wave to spawn coins
         phi = (1 + sqrt(5)) / 2
-        return (1 / sqrt(5)) * ((phi ** self.level) - (-1 / phi) ** self.level)
+        return (1 / sqrt(5)) * ((phi ** level.level) - (-1 / phi) ** level.level)
 
     def spawn_listing(self):
         # time to choose the coins who will spawn
@@ -310,12 +310,13 @@ class CoinSpawner(Entity):
 
             # wave ending
             if CoinSpawner.no_coins(self) and not self.pre_wave_counter:
-                self.level += 1
+                level.add_level()
+                print(f"level = {level.level}")
                 self.spawn_list = []
                 self.spawn_points = self.compute_spawn_point()
                 self.pre_wave_counter = True
 
-                if self.level % 3 == 0:
+                if level.level % 3 == 0:
                     self.powerup_time = True
 
             if self.pre_wave_counter:
@@ -486,6 +487,7 @@ def game_start():
     game.world.spawn_entity(fire_entity)
     game.world.spawn_entity(CoinSpawner())
     game.world.spawn_entity(ScoreText())
+    game.world.spawn_entity(level.LevelText())
     game.world.spawn_entity(enemy_module.EnemyText())
     game.world.spawn_entity(life.LifeText())
 
