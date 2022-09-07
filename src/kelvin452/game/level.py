@@ -15,6 +15,8 @@ class LevelText(Entity):
 
     def __init__(self, x=60, y=28):
         super().__init__()
+        global level
+        level = 1
         self.position = Vector2(x, y)
         self.previous_level = 0
         self.survive_game_over = False
@@ -23,7 +25,6 @@ class LevelText(Entity):
         self.attach_component(self.text_sprite)
 
     def _tick(self):
-        global level
         if self.previous_level != level:
             self.text_sprite.image = default_font.render(f"LEVEL : {level}",
                                                          True,

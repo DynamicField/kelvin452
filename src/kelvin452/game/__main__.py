@@ -267,9 +267,11 @@ class CoinSpawner(Entity):
         self.spawn_list = []
 
     def compute_spawn_point(self):
+        print(f"the fucking level is {level.level}")
+        self.level = level.level
         # it calculates the numbers of points who will use by wave to spawn coins
         phi = (1 + sqrt(5)) / 2
-        return (1 / sqrt(5)) * ((phi ** level.level) - (-1 / phi) ** level.level)
+        return (1 / sqrt(5)) * ((phi ** self.level) - (-1 / phi) ** self.level)
 
     def spawn_listing(self):
         # time to choose the coins who will spawn
@@ -293,11 +295,6 @@ class CoinSpawner(Entity):
                 return False
         return True
 
-    def post_wave(self):
-        ...
-
-    # .
-
     def _tick(self):
         if self.wave:
             self.spawn_listing()
@@ -320,8 +317,6 @@ class CoinSpawner(Entity):
                     self.powerup_time = True
 
                 print(f"level = {level.level}")
-                self.spawn_list = []
-                self.spawn_points = self.compute_spawn_point()
                 self.pre_wave_counter = True
 
             if self.pre_wave_counter:
@@ -331,6 +326,8 @@ class CoinSpawner(Entity):
                     self.pre_wave_timer -= game.delta_time
                 else:
                     level.add_level()
+                    self.spawn_list = []
+                    self.spawn_points = self.compute_spawn_point()
                     self.wave = True
 
     def show_powerup_menu(self):
@@ -409,7 +406,6 @@ class JeanBoss(Entity, EventConsumer):
                 self.position.x = max(self.position.x - 400 * game.delta_time, -200)
             else:
                 self.destroy()  # bye !
-
 
     # Clé d'animation
     def keyframe(self, prev, duration) -> Keyframe:
@@ -490,13 +486,13 @@ def game_start():
     game.world.spawn_entity(foreground)
     objects = Objects()
     game.world.spawn_entity(objects)
-    fire_entity = FireEntity(1024, 315)
-    game.world.spawn_entity(fire_entity)
-    game.world.spawn_entity(CoinSpawner())
     game.world.spawn_entity(ScoreText())
     game.world.spawn_entity(level.LevelText())
     game.world.spawn_entity(enemy_module.EnemyText())
     game.world.spawn_entity(life.LifeText())
+    game.world.spawn_entity(CoinSpawner())
+    fire_entity = FireEntity(1024, 315)
+    game.world.spawn_entity(fire_entity)
 
 
 def launch_game():
