@@ -293,6 +293,11 @@ class CoinSpawner(Entity):
                 return False
         return True
 
+    def post_wave(self):
+        ...
+
+    # .
+
     def _tick(self):
         if self.wave:
             self.spawn_listing()
@@ -303,21 +308,21 @@ class CoinSpawner(Entity):
             if self.spawn_timer <= 0 and self.spawn_list != []:
                 game.world.spawn_entity((self.spawn_list.pop())(0, random.randint(258, 503)))
                 self.spawn_timer = self.spawn_cooldown
-                self.pre_wave_timer = 5
+                self.pre_wave_timer = 4
                 self.pre_wave_counter = False
 
             self.spawn_timer -= game.delta_time
 
             # wave ending
             if CoinSpawner.no_coins(self) and not self.pre_wave_counter:
-                level.add_level()
+                # shit technique to force the boss to come after the third level
+                if level.level % 3 == 0:
+                    self.powerup_time = True
+
                 print(f"level = {level.level}")
                 self.spawn_list = []
                 self.spawn_points = self.compute_spawn_point()
                 self.pre_wave_counter = True
-
-                if level.level % 3 == 0:
-                    self.powerup_time = True
 
             if self.pre_wave_counter:
                 if self.powerup_time and self.pre_wave_timer < 3:
@@ -325,6 +330,7 @@ class CoinSpawner(Entity):
                 elif self.pre_wave_timer > 0:
                     self.pre_wave_timer -= game.delta_time
                 else:
+                    level.add_level()
                     self.wave = True
 
     def show_powerup_menu(self):
@@ -403,6 +409,7 @@ class JeanBoss(Entity, EventConsumer):
                 self.position.x = max(self.position.x - 400 * game.delta_time, -200)
             else:
                 self.destroy()  # bye !
+
 
     # Clé d'animation
     def keyframe(self, prev, duration) -> Keyframe:
