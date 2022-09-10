@@ -1,0 +1,9 @@
+equation, level, spawnpoint, nbr coin, nbr wizard, nbr knight
+
+(1 / math.sqrt(5)) * ((phi ** x) - (-1 / phi) ** x),1,1.0,1,0,0
+(1 / math.sqrt(5)) * ((phi ** x) - (-1 / phi) ** x),2,1.0,2,0,0
+(1 / math.sqrt(5)) * ((phi ** x) - (-1 / phi) ** x),3,2.0,2,1,0
+(1 / math.sqrt(5)) * ((phi ** x) - (-1 / phi) ** x),4,3.0000000000000004,5,1,0
+(1 / math.sqrt(5)) * ((phi ** x) - (-1 / phi) ** x),5,5.000000000000001,5,1,1
+(1 / math.sqrt(5)) * ((phi ** x) - (-1 / phi) ** x),6,8.000000000000002,8,1,2
+(1 / math.sqrt(5)) * ((phi ** x) - (-1 / phi) ** x),7,13.000000000000002,9,7,2

@@ -3,8 +3,9 @@ import pygame.transform
 
 from kelvin452.engine import *
 import random
+import math
+import csv
 
-from math import sqrt
 from kelvin452.game.grounds import *
 from kelvin452.game.score import *
 import kelvin452.game.level as level
@@ -218,7 +219,7 @@ class KnightCoinEntity(Entity):
             enemy_module.modify_enemy(self.reward)
             self.destroy()
 
-        if self.pv <= CoinSpawner.get_coin_pv(KnightCoinEntity) // 2 and self.armored:
+        if 0 < self.pv <= CoinSpawner.get_coin_pv(KnightCoinEntity) // 2 and self.armored:
             self.huge_coin_sprite = pygame.transform.scale(assets.sprite("naked_knight_coin.png"),
                                                            (self.size, self.size))
             self.__sprite = self.attach_component(
@@ -255,7 +256,7 @@ class CoinSpawner(Entity):
         # self.coins_list : [(name, cost, probability / 100), pv , (name, pv, cost, probability / 100), pv]
 
         # the number of points the game will use by wave to spawn coins
-        self.spawn_points = self.compute_spawn_point()
+        self.spawn_points = 0
         self.wave = True
         self.spawn_cooldown = 0.3
         self.spawn_timer = 0
@@ -266,15 +267,25 @@ class CoinSpawner(Entity):
 
         self.spawn_list = []
 
+        # for the csv file
+        self.csv_equation = "(1 / math.sqrt(5)) * ((phi ** x) - (-1 / phi) ** x)"
+        self.csv_spawnpoint = 0
+        self.csv_nbr_coin = 0
+        self.csv_nbr_wizard = 0
+        self.csv_nbr_knight = 0
+
     def compute_spawn_point(self):
         print(f"the fucking level is {level.level}")
-        self.level = level.level
+        x = level.level
         # it calculates the numbers of points who will use by wave to spawn coins
-        phi = (1 + sqrt(5)) / 2
-        return (1 / sqrt(5)) * ((phi ** self.level) - (-1 / phi) ** self.level)
+        phi = (1 + math.sqrt(5)) / 2
+        equation = (1 / math.sqrt(5)) * ((phi ** x) - (-1 / phi) ** x)
+        return equation
 
     def spawn_listing(self):
         # time to choose the coins who will spawn
+        self.spawn_points = self.compute_spawn_point()
+        self.csv_spawnpoint = self.spawn_points
         print(f"spawnpoint : {self.spawn_points}")
         for i in range(-1, - 1 - len(self.coins_list_setup), -1):
             print(f"i : {i}")
@@ -285,6 +296,9 @@ class CoinSpawner(Entity):
                 self.spawn_points -= cost
                 print(f"spawnpoint : {self.spawn_points}")
                 self.spawn_list.append(self.coins_list_setup[i][0])
+
+        # we take the number of coins for each type:
+        self.nbr_types_coins_csv_log()
 
         # Now, randomizing for the spawning list
         random.shuffle(self.spawn_list)
@@ -312,11 +326,18 @@ class CoinSpawner(Entity):
 
             # wave ending
             if CoinSpawner.no_coins(self) and not self.pre_wave_counter:
-                # shit technique to force the boss to come after the third level
                 if level.level % 3 == 0:
                     self.powerup_time = True
 
                 print(f"level = {level.level}")
+
+                # time to write all in the log file
+                with open('log_coin_spawner.csv', 'a', newline='') as file:
+                    writer = csv.writer(file)
+                    writer.writerow(
+                        [self.csv_equation, level.level, self.csv_spawnpoint, self.csv_nbr_coin, self.csv_nbr_wizard,
+                         self.csv_nbr_knight])
+
                 self.pre_wave_counter = True
 
             if self.pre_wave_counter:
@@ -327,7 +348,6 @@ class CoinSpawner(Entity):
                 else:
                     level.add_level()
                     self.spawn_list = []
-                    self.spawn_points = self.compute_spawn_point()
                     self.wave = True
 
     def show_powerup_menu(self):
@@ -339,6 +359,15 @@ class CoinSpawner(Entity):
         jean.destroyed_notifiers.append(unpause)
         game.world.spawn_entity(jean)
         self.powerup_time = False
+
+    def nbr_types_coins_csv_log(self):  # it'll use self.spawn_list to find how many coin in each type
+        for i in self.spawn_list:
+            if i == ClassicCoinEntity:
+                self.csv_nbr_coin += 1
+            elif i == WizardCoinEntity:
+                self.csv_nbr_wizard += 1
+            elif i == KnightCoinEntity:
+                self.csv_nbr_knight += 1
 
 
 class JeanBoss(Entity, EventConsumer):
