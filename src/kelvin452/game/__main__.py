@@ -15,6 +15,10 @@ import kelvin452.game.life as life
 from collections import namedtuple
 
 
+def ultimate_random_total(min, max):
+    return random.randint(min, max)
+
+
 class FireEntity(Entity, EventConsumer):
     def __init__(self, x, y):
         super().__init__()
@@ -266,6 +270,8 @@ class CoinSpawner(Entity):
         self.powerup_time = False
 
         self.spawn_list = []
+        self.random_y = 300
+        self.previous_y = 300
 
         # for the csv file
         self.csv_equation = "(1 / math.sqrt(5)) * ((phi ** x) - (-1 / phi) ** x)"
@@ -317,7 +323,14 @@ class CoinSpawner(Entity):
         if not self.paused:
             # spawning part
             if self.spawn_timer <= 0 and self.spawn_list != []:
-                game.world.spawn_entity((self.spawn_list.pop())(0, random.randint(258, 503)))
+                # to make a real random spawn for y
+                self.random_y = ultimate_random_total(200, 515)
+                while self.previous_y - 50 <= self.random_y <= self.previous_y + 50:
+                    self.random_y = ultimate_random_total(258, 503)
+                game.world.spawn_entity(
+                    (self.spawn_list.pop())(0, self.random_y))
+                self.previous_y = self.random_y
+
                 self.spawn_timer = self.spawn_cooldown
                 self.pre_wave_timer = 4
                 self.pre_wave_counter = False
