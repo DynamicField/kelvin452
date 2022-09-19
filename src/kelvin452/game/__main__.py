@@ -145,8 +145,9 @@ class WizardCoinEntity(Entity):
         self.position_backup = self.position
         self.shoot_cooldown = random.randint(1, 2)
         self.timer = self.shoot_cooldown
-        self.size = random.randint(32, 64)
-        self.huge_coin_sprite = pygame.transform.scale(assets.sprite("wizard_coin.png"), (self.size, self.size))
+        self.width = random.randint(32, 64)
+        self.length = (29 * self.width) // 30
+        self.huge_coin_sprite = pygame.transform.scale(assets.sprite("wizard_coin.png"), (self.length, self.width))
         self.__sprite = self.attach_component(make_sprite(self.huge_coin_sprite, (self.position.x, self.position.y)))
         self.__collision = self.attach_component((CollisionHitBox(follow_sprite_rect=True, draw_box=False)))
 
@@ -161,7 +162,8 @@ class WizardCoinEntity(Entity):
         if self.position.x >= 575:
             self.timer -= game.delta_time
             if self.timer <= 0:
-                projectile_entity = WizardProjectileEntity(self.position.x, self.position.y - random.randint(-19, 19))
+                projectile_entity = WizardProjectileEntity(self.position.x, self.position.y - random.randint(-19, 19),
+                                                           self)
                 game.world.spawn_entity(projectile_entity)
                 self.timer = self.shoot_cooldown
                 self.position = self.position_backup.copy()
@@ -183,13 +185,18 @@ class WizardCoinEntity(Entity):
 
 
 class WizardProjectileEntity(Entity, ReactsToCollisions):
-    def __init__(self, x, y):
+    def __init__(self, x, y, wizard):
         super().__init__()
         self.position = Vector2(x, y)
-        self.__launched = False
-        huge_projectile_sprite = pygame.transform.scale(assets.sprite("wizard_projectile.png"), (94, 38))
+        self.width = wizard.width // 3
+        self.length = (13 * self.width) // 10
+        huge_projectile_sprite = pygame.transform.scale(assets.sprite("wizard_projectile.png"),
+                                                        (self.length, self.width))
         self.__sprite = self.attach_component(make_sprite(huge_projectile_sprite, (self.position.x, self.position.y)))
         self.__collision = self.attach_component(CollisionHitBox(follow_sprite_rect=True, draw_box=False))
+        self.trail = WizardProjectileTrailEntity(self.position.x, self.position.y, self)
+        self.trail.projectile = self
+        game.world.spawn_entity(self.trail)
 
     def _tick(self):
         self.position.x += 600 * game.delta_time
@@ -200,6 +207,24 @@ class WizardProjectileEntity(Entity, ReactsToCollisions):
     def _on_collide(self, other: Entity):
         if isinstance(other, FireEntity):
             game.world.destroy_entity(self)
+
+
+class WizardProjectileTrailEntity(Entity):
+    def __init__(self, x, y, projectile):
+        super().__init__()
+        self.position = Vector2(x, y)
+        self.width = (12 * projectile.width) // 10
+        self.length = (30 * projectile.length) // 13
+        huge_projectile_trail_sprite = pygame.transform.scale(assets.sprite("wizard_projectile_trail.png"),
+                                                              (self.length,
+                                                               self.width))
+        self.__sprite = self.attach_component(
+            make_sprite(huge_projectile_trail_sprite, (self.position.x, self.position.y)))
+
+    def _tick(self):
+        #if not game.world.is_alive(projectile):
+
+        if self.position.x  != projectile.position.x
 
 
 class KnightCoinEntity(Entity):
