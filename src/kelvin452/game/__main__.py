@@ -53,10 +53,10 @@ class FireEntity(Entity, EventConsumer):
         else:
             self.click_allowed = False
 
-        if game.input.is_key_down(pygame.K_DOWN):
+        if game.input.is_key_down(pygame.K_DOWN) or game.input.is_key_down(pygame.K_s):
             if self.position.y + 100 <= 600:
                 self.add_y(600 * game.delta_time)
-        if game.input.is_key_down(pygame.K_UP):
+        if game.input.is_key_down(pygame.K_UP) or game.input.is_key_down(pygame.K_z):
             if self.position.y - 10 >= 100:
                 self.add_y(-600 * game.delta_time)
 
