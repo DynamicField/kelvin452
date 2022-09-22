@@ -12,7 +12,8 @@ class FireEntity(Entity, ReactsToCollisions):
         self.position = Vector2(x, y)
         huge_fire_sprite = pygame.transform.scale(assets.sprite("fire.png"), (220, 180))
         self.__sprite = self.attach_component(KelvinSprite(huge_fire_sprite))
-        self.__collision = self.attach_component(CollisionHitBox(follow_sprite_rect=True, draw_box=True))
+        self.__collision = self.attach_component(
+            CollisionHitBox(follow_sprite_rect=True, draw_box=True, offset=pygame.Rect(60, 0, -60, 0)))
 
     def _on_collide(self, other: Entity):
         print("oskour la collision vers " + str(other))
