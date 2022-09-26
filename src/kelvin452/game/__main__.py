@@ -162,7 +162,7 @@ class WizardCoinEntity(Entity):
         if self.position.x >= 575:
             self.timer -= game.delta_time
             if self.timer <= 0:
-                projectile_entity = WizardProjectileEntity(self.position.x, self.position.y - random.randint(-19, 19),
+                projectile_entity = WizardProjectileEntity(self.position.x, self.position.y,
                                                            self)
                 game.world.spawn_entity(projectile_entity)
                 self.timer = self.shoot_cooldown
@@ -187,9 +187,9 @@ class WizardCoinEntity(Entity):
 class WizardProjectileEntity(Entity, ReactsToCollisions):
     def __init__(self, x, y, wizard):
         super().__init__()
-        self.position = Vector2(x, y)
-        self.width = wizard.width // 2
-        self.length = (13 * self.width) // 10
+        self.width = wizard.width / 2
+        self.length = (13 * self.width) / 10
+        self.position = Vector2(x + (26 * wizard.length) / 29, y + (12.5 * wizard.width) / 30 - self.width / 2)
         huge_projectile_sprite = pygame.transform.scale(assets.sprite("wizard_projectile.png"),
                                                         (self.length, self.width))
         self.__sprite = self.attach_component(make_sprite(huge_projectile_sprite, (self.position.x, self.position.y)))
@@ -213,9 +213,9 @@ class WizardProjectileTrailEntity(Entity):
     def __init__(self, x, y, projectile):
         super().__init__()
         self.projectile = projectile
-        self.position = Vector2(x - (16 * projectile.length) / 30, y - projectile.width / 12)
-        self.width = (12 * projectile.width) // 10
-        self.length = (30 * projectile.length) // 13
+        self.width = (12 * projectile.width) / 10
+        self.length = (30 * projectile.length) / 13
+        self.position = Vector2(x - (16 * self.length) // 30, y - self.width // 12)
         huge_projectile_trail_sprite = pygame.transform.scale(assets.sprite("wizard_projectile_trail.png"),
                                                               (self.length,
                                                                self.width))
@@ -314,7 +314,7 @@ class CoinSpawner(Entity):
         # it calculates the numbers of points who will use by wave to spawn coins
         phi = (1 + math.sqrt(5)) / 2
         equation = (1 / math.sqrt(5)) * ((phi ** x) - (-1 / phi) ** x)
-        return equation
+        return x ** 2  # equation
 
     def spawn_listing(self):
         # time to choose the coins who will spawn
@@ -378,6 +378,7 @@ class CoinSpawner(Entity):
                     writer.writerow(
                         [self.csv_equation, level.level, self.csv_spawnpoint, self.csv_nbr_coin, self.csv_nbr_wizard,
                          self.csv_nbr_knight])
+                    self.csv_nbr_coin, self.csv_nbr_wizard, self.csv_nbr_knight = 0, 0, 0
 
                 self.pre_wave_counter = True
 
