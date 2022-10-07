@@ -193,10 +193,9 @@ class WizardProjectileEntity(Entity, ReactsToCollisions):
         huge_projectile_sprite = pygame.transform.scale(assets.sprite("wizard_projectile.png"),
                                                         (self.length, self.width))
         self.__sprite = self.attach_component(make_sprite(huge_projectile_sprite, (self.position.x, self.position.y)))
-        self.__collision = self.attach_component(CollisionHitBox(follow_sprite_rect=True, draw_box=False))
-        self.trail = WizardProjectileTrailEntity(self.position.x, self.position.y, self)
-        self.trail.projectile = self
-        game.world.spawn_entity(self.trail)
+        self.__collision = self.attach_component(
+            CollisionHitBox(offset=pygame.Rect(0, 0, 0, 0), follow_sprite_rect=True,
+                            draw_box=True))
 
     def _tick(self):
         self.position.x += 600 * game.delta_time
