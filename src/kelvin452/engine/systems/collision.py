@@ -116,8 +116,8 @@ class CollisionHitBox(EntityComponent):
             sprite = entity.get_component(KelvinSprite)
             if sprite is not None:
                 adjusted_rect = sprite.rect.move(self.offset.x, self.offset.y)
-                adjusted_rect.width = adjusted_rect.width + self.offset.width
-                adjusted_rect.height = adjusted_rect.height + self.offset.height
+                adjusted_rect.width = self.offset.width
+                adjusted_rect.height = self.offset.height
                 self.rect = adjusted_rect
         if self.__rect_set:
             game.collision.refresh_hit_box(self)
