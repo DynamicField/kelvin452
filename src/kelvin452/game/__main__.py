@@ -281,6 +281,7 @@ class EldenWizardEntity(Entity):
         self.position = Vector2(x, y)
         self.move_goal = self.position
         self.moving_direction = None  # if the Coin move in the x or y axe
+        self.moving_speed = 1
         self.height = 149
         self.length = 79
         self.huge_coin_sprite = pygame.transform.scale(assets.sprite("elden_wizard.png"), (self.length, self.height))
@@ -334,7 +335,7 @@ class EldenWizardEntity(Entity):
             self.timer -= game.delta_time
             if self.timer <= 0:
                 projectile_entity = EldenWizardProjectileEntity(self.position.x, self.position.y,
-                                                                self)
+                                                                self, (24, 60))
                 game.world.spawn_entity(projectile_entity)
                 self.timer = self.shoot_cooldown
             if self.position == self.move_goal:
@@ -349,9 +350,9 @@ class EldenWizardEntity(Entity):
 
             elif self.moving_direction == 1:
                 if self.move_goal[0] - self.position.x < 0:
-                    self.position.x -= 200 * game.delta_time
+                    self.position.x -= 200 * game.delta_time * self.moving_speed
                 else:
-                    self.position.x += 200 * game.delta_time
+                    self.position.x += 200 * game.delta_time * self.moving_speed
                 # don't leave the screen!
                 if self.position.x > 575:
                     self.position.x = 575
@@ -360,13 +361,14 @@ class EldenWizardEntity(Entity):
 
             elif self.moving_direction == 2:
                 if self.move_goal[1] - self.position.y < 0:
-                    self.position.y -= 200 * game.delta_time
+                    self.position.y -= 200 * game.delta_time * self.moving_speed
                 else:
-                    self.position.y += 200 * game.delta_time
+                    self.position.y += 200 * game.delta_time * self.moving_speed
                 if self.position.y > 600:
                     self.position.x = 600
                 elif self.position.x < 100:
                     self.position.x = 100
+            self.moving_speed += self.moving_speed / 100 * game.delta_time
 
     def set_cooldown(self, value):
         self.shoot_cooldown = value
