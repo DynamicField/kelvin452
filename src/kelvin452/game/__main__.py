@@ -314,7 +314,7 @@ class EldenWizardEntity(Entity):
             self.set_cooldown(2)
 
         # this one is for utilities in the phase (x or y and move goal currently
-        a = (random.randint(0, 575), random.randint(100, 600)), random.randint(1, 2)
+        a = (random.randint(0, 575), random.randint(100, 500)), random.randint(1, 2)
         print(a)
         return a
 
@@ -329,6 +329,7 @@ class EldenWizardEntity(Entity):
 
     def _tick(self):
         if self.pv <= 0:
+            add_score(100)
             self.destroy()
 
         if self.phase == 1:
