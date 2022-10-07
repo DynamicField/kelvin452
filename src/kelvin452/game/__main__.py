@@ -313,7 +313,9 @@ class EldenWizardEntity(Entity):
             self.set_cooldown(2)
 
         # this one is for utilities in the phase (x or y and move goal currently
-        return (random.randint(0, 575), random.randint(100, 600)), random.randint(1, 2)
+        a = (random.randint(0, 575), random.randint(100, 600)), random.randint(1, 2)
+        print(a)
+        return a
 
     def phase_two(self):
         self.phase = 2
@@ -338,6 +340,33 @@ class EldenWizardEntity(Entity):
             if self.position == self.move_goal:
                 self.move_goal = self.phase_one()[0]
                 self.moving_direction = self.phase_one()[1]
+            elif self.moving_direction == 1 and self.move_goal[0] - 10 <= self.position.x <= self.move_goal[0] + 10:
+                self.position.x = self.move_goal[0]
+                self.moving_direction = 2
+            elif self.moving_direction == 2 and self.move_goal[1] - 10 <= self.position.y <= self.move_goal[1] + 10:
+                self.position.y = self.move_goal[1]
+                self.moving_direction = 1
+
+            elif self.moving_direction == 1:
+                if self.move_goal[0] - self.position.x < 0:
+                    self.position.x -= 200 * game.delta_time
+                else:
+                    self.position.x += 200 * game.delta_time
+                # don't leave the screen!
+                if self.position.x > 575:
+                    self.position.x = 575
+                elif self.position.x < 0:
+                    self.position.x = 0
+
+            elif self.moving_direction == 2:
+                if self.move_goal[1] - self.position.y < 0:
+                    self.position.y -= 200 * game.delta_time
+                else:
+                    self.position.y += 200 * game.delta_time
+                if self.position.y > 600:
+                    self.position.x = 600
+                elif self.position.x < 100:
+                    self.position.x = 100
 
     def set_cooldown(self, value):
         self.shoot_cooldown = value
