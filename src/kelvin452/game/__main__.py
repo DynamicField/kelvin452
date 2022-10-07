@@ -286,7 +286,7 @@ class EldenWizardEntity(Entity):
         self.length = 79
         self.huge_coin_sprite = pygame.transform.scale(assets.sprite("elden_wizard.png"), (self.length, self.height))
         self.__sprite = self.attach_component(make_sprite(self.huge_coin_sprite, (self.position.x, self.position.y)))
-        self.__collision = self.attach_component((CollisionHitBox(follow_sprite_rect=True, draw_box=False)))
+        self.__collision = self.attach_component(CollisionHitBox(follow_sprite_rect=True, draw_box=False))
 
         # spawning health bar
         self.health_bar = EldenWizardHealthBar(self)
@@ -335,7 +335,7 @@ class EldenWizardEntity(Entity):
         if self.phase == 1:
             self.timer -= game.delta_time
             if self.timer <= 0:
-                projectile_entity = EldenWizardProjectileEntity(self.position.x, self.position.y,
+                projectile_entity = EldenWizardProjectileEntity(self.position.x+49, self.position.y+39,
                                                                 self, (24, 60))
                 game.world.spawn_entity(projectile_entity)
                 self.timer = self.shoot_cooldown
@@ -737,6 +737,7 @@ def game_start():
     game.world.spawn_entity(enemy_module.EnemyText())
     game.world.spawn_entity(life.LifeText())
     elden_wizard = EldenWizardEntity(600, 315)
+    game.world.spawn_entity(elden_wizard)
     # game.world.spawn_entity(elden_wizard)
 
     fire_entity = FireEntity(1024, 315)
