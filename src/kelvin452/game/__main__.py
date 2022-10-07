@@ -406,6 +406,16 @@ class EldenWizardProjectileEntity(Entity, ReactsToCollisions):
             game.world.destroy_entity(self)
 
 
+class EldenWizardCrystalShieldEntity(Entity):
+    def __init__(self, x, y):
+        super().__init__()
+        self.position = Vector2(x, y)
+        self.height = 20
+        self.length = 21
+        self.huge_coin_sprite = pygame.transform.scale(assets.sprite("elden_wizard_crystal_shield.png"),
+                                                       (self.height, self.length))
+
+
 class EldenWizardHealthBar(Entity):
     def __init__(self, elden_wizard, x=289, y=24):
         super().__init__()
@@ -727,7 +737,8 @@ def game_start():
     game.world.spawn_entity(enemy_module.EnemyText())
     game.world.spawn_entity(life.LifeText())
     elden_wizard = EldenWizardEntity(600, 315)
-    game.world.spawn_entity(elden_wizard)
+    # game.world.spawn_entity(elden_wizard)
+
     fire_entity = FireEntity(1024, 315)
     game.world.spawn_entity(fire_entity)
 
