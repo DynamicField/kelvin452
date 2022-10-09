@@ -308,6 +308,9 @@ class EldenWizardEntity(Entity):
         elif self.pv / self.pv_max < 0.25:
             self.phase_four()
 
+    def moving_goal(self):
+        return (random.randint(0, 575), random.randint(100, 500)), random.randint(1, 2)
+
     def phase_one(self):
         # start the phase one
         if self.phase != 1:
@@ -315,7 +318,6 @@ class EldenWizardEntity(Entity):
             self.set_cooldown(2)
 
         # this one is for utilities in the phase (x or y and move goal currently)
-        return (random.randint(0, 575), random.randint(100, 500)), random.randint(1, 2)
 
     def phase_two(self):
         # start the phase two
@@ -342,8 +344,8 @@ class EldenWizardEntity(Entity):
                 game.world.spawn_entity(projectile_entity)
                 self.timer = self.shoot_cooldown
             if self.position == self.move_goal:
-                self.move_goal = self.phase_one()[0]
-                self.moving_direction = self.phase_one()[1]
+                self.move_goal = self.moving_goal()[0]
+                self.moving_direction = self.move_goal[1]
             elif self.moving_direction == 1 and self.move_goal[0] - 10 <= self.position.x <= self.move_goal[0] + 10:
                 self.position.x = self.move_goal[0]
                 self.moving_direction = 2
@@ -372,6 +374,48 @@ class EldenWizardEntity(Entity):
                 elif self.position.x < 100:
                     self.position.x = 100
             self.moving_speed += self.moving_speed / 100 * game.delta_time
+            self.shoot_cooldown += self.shoot_cooldown / 100 * game.delta_time
+        elif self.phase == 2:
+            self.timer -= game.delta_time
+            if self.timer <= 0:
+                projectile_entity = EldenWizardProjectileEntity(self.position.x + 49, self.position.y + 39,
+                                                                self, (24, 60))
+                game.world.spawn_entity(projectile_entity)
+                self.timer = self.shoot_cooldown
+            if self.position == self.move_goal:
+                self.move_goal = self.moving_goal()[0]
+                self.moving_direction = self.move_goal[1]
+            elif self.moving_direction == 1 and self.move_goal[0] - 10 <= self.position.x <= self.move_goal[0] + 10:
+                self.position.x = self.move_goal[0]
+                self.moving_direction = 2
+            elif self.moving_direction == 2 and self.move_goal[1] - 10 <= self.position.y <= self.move_goal[1] + 10:
+                self.position.y = self.move_goal[1]
+                self.moving_direction = 1
+
+            elif self.moving_direction == 1:
+                if self.move_goal[0] - self.position.x < 0:
+                    self.position.x -= 200 * game.delta_time * self.moving_speed
+                else:
+                    self.position.x += 200 * game.delta_time * self.moving_speed
+                # don't leave the screen!
+                if self.position.x > 575:
+                    self.position.x = 575
+                elif self.position.x < 0:
+                    self.position.x = 0
+
+            elif self.moving_direction == 2:
+                if self.move_goal[1] - self.position.y < 0:
+                    self.position.y -= 200 * game.delta_time * self.moving_speed
+                else:
+                    self.position.y += 200 * game.delta_time * self.moving_speed
+                if self.position.y > 600:
+                    self.position.x = 600
+                elif self.position.x < 100:
+                    self.position.x = 100
+            self.moving_speed += self.moving_speed / 2 / 100 * game.delta_time
+
+            if self.shield_cooldown <=0:
+
 
     def set_cooldown(self, value):
         self.shoot_cooldown = value
@@ -750,7 +794,6 @@ def game_start():
     game.world.spawn_entity(life.LifeText())
     elden_wizard = EldenWizardEntity(600, 315)
     game.world.spawn_entity(elden_wizard)
-
 
     fire_entity = FireEntity(1024, 315)
     game.world.spawn_entity(fire_entity)

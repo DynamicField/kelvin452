@@ -35,8 +35,8 @@ class CollisionSystem(System):
         self.__refreshing_collisions = True
 
         # Bruteforce, faudrait optimiser ça avec des quadtrees.
-        for hit_box in self.__refreshed_hit_boxes:
-            for other_hit_box in self.__all_hitboxes:
+        for hit_box in self.__refreshed_hit_boxes.copy():
+            for other_hit_box in self.__all_hitboxes.copy():
                 if hit_box.is_destroyed or other_hit_box.is_destroyed or hit_box == other_hit_box:
                     continue
                 if hit_box.rect.colliderect(other_hit_box.rect):
