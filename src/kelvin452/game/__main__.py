@@ -309,13 +309,14 @@ class EldenWizardEntity(Entity):
             self.phase_four()
 
     def moving_goal(self):
-        return (random.randint(0, 575), random.randint(100, 500)), random.randint(1, 2)
+        self.move_goal, self.moving_direction = (random.randint(0, 575), random.randint(100, 500)), random.randint(1, 2)
 
     def phase_one(self):
         # start the phase one
         if self.phase != 1:
             self.phase = 1
             self.set_cooldown(2)
+            self.move_goal, self.moving_direction = self.moving_goal()[0]
 
         # this one is for utilities in the phase (x or y and move goal currently)
 
@@ -344,8 +345,7 @@ class EldenWizardEntity(Entity):
                 game.world.spawn_entity(projectile_entity)
                 self.timer = self.shoot_cooldown
             if self.position == self.move_goal:
-                self.move_goal = self.moving_goal()[0]
-                self.moving_direction = self.move_goal[1]
+                self.moving_goal()
             elif self.moving_direction == 1 and self.move_goal[0] - 10 <= self.position.x <= self.move_goal[0] + 10:
                 self.position.x = self.move_goal[0]
                 self.moving_direction = 2
@@ -383,8 +383,7 @@ class EldenWizardEntity(Entity):
                 game.world.spawn_entity(projectile_entity)
                 self.timer = self.shoot_cooldown
             if self.position == self.move_goal:
-                self.move_goal = self.moving_goal()[0]
-                self.moving_direction = self.move_goal[1]
+                self.moving_goal()
             elif self.moving_direction == 1 and self.move_goal[0] - 10 <= self.position.x <= self.move_goal[0] + 10:
                 self.position.x = self.move_goal[0]
                 self.moving_direction = 2
@@ -414,8 +413,9 @@ class EldenWizardEntity(Entity):
                     self.position.x = 100
             self.moving_speed += self.moving_speed / 2 / 100 * game.delta_time
 
-            if self.shield_cooldown <=0:
-
+            if self.shield_cooldown <= 0:
+                game.world.spawn_entity(EldenWizardCrystalShieldEntity(self.position.x, self.position.y, self))
+                self.shield_cooldown = 5
 
     def set_cooldown(self, value):
         self.shoot_cooldown = value
@@ -453,11 +453,12 @@ class EldenWizardProjectileEntity(Entity, ReactsToCollisions):
 
 
 class EldenWizardCrystalShieldEntity(Entity):
-    def __init__(self, x, y):
+    def __init__(self, x, y, elden_wizard):
         super().__init__()
+        self.elden_wizard = elden_wizard
         self.radiant = math.pi
         self.position = Vector2(x, y)
-        self.original_position = self.position
+        # self.original_position = self.position
         self.height = 20
         self.length = 21
         self.huge_coin_sprite = pygame.transform.scale(assets.sprite("elden_wizard_crystal_shield.png"),
@@ -468,8 +469,8 @@ class EldenWizardCrystalShieldEntity(Entity):
     def _tick(self):
         self.radiant -= 2 * game.delta_time
         print(self.position)
-        self.position = self.original_position.x + math.cos(self.radiant) * 120, self.original_position.y + math.sin(
-            self.radiant) * 120
+        self.position = self.elden_wizard.position.x + math.cos(
+            self.radiant) * 120, self.elden_wizard.position.y + math.sin(self.radiant) * 120
 
 
 class EldenWizardHealthBar(Entity):
