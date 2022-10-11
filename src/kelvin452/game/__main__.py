@@ -273,8 +273,9 @@ class KnightCoinEntity(Entity):
 class EldenWizardEntity(Entity):
     def __init__(self, x, y):
         super().__init__()
-        self.shoot_cooldown = 2
         self.shield_cooldown = 0
+        self.crystal_number = 0
+        self.shoot_cooldown = 2
         self.timer = self.shoot_cooldown
         self.phase = 1
         self.pv = 4
@@ -324,6 +325,7 @@ class EldenWizardEntity(Entity):
         # start the phase two
         if self.phase != 2:
             self.phase = 2
+            self.crystal_number = 3
             self.set_cooldown(2)
 
     def phase_three(self):
@@ -414,8 +416,11 @@ class EldenWizardEntity(Entity):
             self.moving_speed += self.moving_speed / 2 / 100 * game.delta_time
 
             if self.shield_cooldown <= 0:
-                game.world.spawn_entity(EldenWizardCrystalShieldEntity(self.position.x, self.position.y, self))
+                for i in range(self.crystal_number):
+                    game.world.spawn_entity(EldenWizardCrystalShieldEntity(self.position.x, self.position.y, self))
                 self.shield_cooldown = 5
+                if self.crystal_number < 5:
+                    self.crystal_number += 1
 
     def set_cooldown(self, value):
         self.shoot_cooldown = value
