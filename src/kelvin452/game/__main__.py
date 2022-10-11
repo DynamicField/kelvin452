@@ -375,6 +375,7 @@ class EldenWizardEntity(Entity):
                     self.position.x = 100
             self.moving_speed += self.moving_speed / 100 * game.delta_time
             self.shoot_cooldown += self.shoot_cooldown / 100 * game.delta_time
+
         elif self.phase == 2:
             self.timer -= game.delta_time
             if self.timer <= 0:
@@ -415,7 +416,7 @@ class EldenWizardEntity(Entity):
 
             if self.shield_cooldown <= 0:
                 game.world.spawn_entity(EldenWizardCrystalShieldEntity(self.position.x, self.position.y, self))
-                self.shield_cooldown = 5
+                # self.shield_cooldown = 5
 
     def set_cooldown(self, value):
         self.shoot_cooldown = value
@@ -468,9 +469,9 @@ class EldenWizardCrystalShieldEntity(Entity):
 
     def _tick(self):
         self.radiant -= 2 * game.delta_time
-        print(self.position)
         self.position = self.elden_wizard.position.x + math.cos(
-            self.radiant) * 120, self.elden_wizard.position.y + math.sin(self.radiant) * 120
+            self.radiant) * 120 + 33 - self.length // 2, self.elden_wizard.position.y + math.sin(
+            self.radiant) * 120 + 79 - self.height // 2
 
 
 class EldenWizardHealthBar(Entity):
