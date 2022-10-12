@@ -416,7 +416,7 @@ class EldenWizardEntity(Entity):
 
             if self.shield_cooldown <= 0:
                 game.world.spawn_entity(EldenWizardCrystalShieldEntity(self.position.x, self.position.y, self))
-                # self.shield_cooldown = 5
+                self.shield_cooldown = 5
 
     def set_cooldown(self, value):
         self.shoot_cooldown = value
