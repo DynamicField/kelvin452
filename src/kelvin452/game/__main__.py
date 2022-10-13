@@ -275,6 +275,8 @@ class EldenWizardEntity(Entity):
         super().__init__()
         self.shoot_cooldown = 2
         self.shield_cooldown = 0
+        self.crystal_speed = 2
+        self.wait_time = 0  # it's the timer for the placement of the crystal in the circle
         self.timer = self.shoot_cooldown
         self.phase = 1
         self.pv = 4
@@ -324,6 +326,7 @@ class EldenWizardEntity(Entity):
         # start the phase two
         if self.phase != 2:
             self.phase = 2
+            self.crystal_number = 3
             self.set_cooldown(2)
 
     def phase_three(self):
@@ -415,8 +418,16 @@ class EldenWizardEntity(Entity):
             self.moving_speed += self.moving_speed / 2 / 100 * game.delta_time
 
             if self.shield_cooldown <= 0:
-                game.world.spawn_entity(EldenWizardCrystalShieldEntity(self.position.x, self.position.y, self))
-                self.shield_cooldown = 5
+                self.crystal_counter = self.crystal_number
+                if self.wait_time <= 0 and self.crystal_counter > 0:
+                    game.world.spawn_entity(EldenWizardCrystalShieldEntity(self.position.x, self.position.y, self))
+                    self.crystal_counter -= 1
+                    self.wait_time = (2 * math.pi / self.crystal_speed) / self.crystal_number
+                else:
+                    self.wait_time -= game.delta_time
+
+                if self.crystal_counter == 0:
+                    self.shield_cooldown = 5
 
     def set_cooldown(self, value):
         self.shoot_cooldown = value
@@ -468,7 +479,7 @@ class EldenWizardCrystalShieldEntity(Entity):
         self.__collision = self.attach_component(CollisionHitBox(follow_sprite_rect=True, draw_box=False))
 
     def _tick(self):
-        self.radiant -= 2 * game.delta_time
+        self.radiant -= self.elden_wizard.crystal_speed * game.delta_time
         self.position = self.elden_wizard.position.x + math.cos(
             self.radiant) * 120 + 33 - self.length // 2, self.elden_wizard.position.y + math.sin(
             self.radiant) * 120 + 79 - self.height // 2
