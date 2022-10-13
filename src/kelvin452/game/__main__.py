@@ -91,7 +91,7 @@ class DragonEntity(Entity, ReactsToCollisions):
                     game.world.destroy_entity(self)
                 else:
                     self.durability -= 1
-        elif type(other) == EldenWizardEntity:
+        elif type(other) in (EldenWizardEntity, EldenWizardCrystalShieldEntity):
             other.dragon_touch(self.damage)
             if self.durability == 1:
                 game.world.destroy_entity(self)
@@ -327,6 +327,7 @@ class EldenWizardEntity(Entity):
         if self.phase != 2:
             self.phase = 2
             self.crystal_number = 3
+            self.crystal_counter = self.crystal_number
             self.set_cooldown(2)
 
     def phase_three(self):
@@ -418,16 +419,17 @@ class EldenWizardEntity(Entity):
             self.moving_speed += self.moving_speed / 2 / 100 * game.delta_time
 
             if self.shield_cooldown <= 0:
-                self.crystal_counter = self.crystal_number
                 if self.wait_time <= 0 and self.crystal_counter > 0:
                     game.world.spawn_entity(EldenWizardCrystalShieldEntity(self.position.x, self.position.y, self))
                     self.crystal_counter -= 1
+                    print(self.crystal_counter)
                     self.wait_time = (2 * math.pi / self.crystal_speed) / self.crystal_number
                 else:
                     self.wait_time -= game.delta_time
 
                 if self.crystal_counter == 0:
                     self.shield_cooldown = 5
+                    self.crystal_counter = self.crystal_number
 
     def set_cooldown(self, value):
         self.shoot_cooldown = value
@@ -467,6 +469,7 @@ class EldenWizardProjectileEntity(Entity, ReactsToCollisions):
 class EldenWizardCrystalShieldEntity(Entity):
     def __init__(self, x, y, elden_wizard):
         super().__init__()
+        self.pv = 1
         self.elden_wizard = elden_wizard
         self.radiant = math.pi
         self.position = Vector2(x, y)
@@ -478,7 +481,12 @@ class EldenWizardCrystalShieldEntity(Entity):
         self.__sprite = self.attach_component(make_sprite(self.huge_coin_sprite, (self.position.x, self.position.y)))
         self.__collision = self.attach_component(CollisionHitBox(follow_sprite_rect=True, draw_box=False))
 
+    def dragon_touch(self, damage):
+        self.pv -= damage
+
     def _tick(self):
+        if self.pv <= 0:
+            self.destroy()
         self.radiant -= self.elden_wizard.crystal_speed * game.delta_time
         self.position = self.elden_wizard.position.x + math.cos(
             self.radiant) * 120 + 33 - self.length // 2, self.elden_wizard.position.y + math.sin(
