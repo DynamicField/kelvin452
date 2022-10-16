@@ -152,8 +152,8 @@ class WizardCoinEntity(Entity):
         self.shoot_cooldown = random.randint(1, 2)
         self.timer = self.shoot_cooldown
         self.height = random.randint(32, 64)
-        self.length = (29 * self.height) // 30
-        self.huge_coin_sprite = pygame.transform.scale(assets.sprite("wizard_coin.png"), (self.length, self.height))
+        self.width = (29 * self.height) // 30
+        self.huge_coin_sprite = pygame.transform.scale(assets.sprite("wizard_coin.png"), (self.width, self.height))
         self.__sprite = self.attach_component(make_sprite(self.huge_coin_sprite, (self.position.x, self.position.y)))
         self.__collision = self.attach_component((CollisionHitBox(follow_sprite_rect=True, draw_box=False)))
 
@@ -194,10 +194,10 @@ class WizardProjectileEntity(Entity, ReactsToCollisions):
     def __init__(self, x, y, wizard):
         super().__init__()
         self.height = wizard.height / 2
-        self.length = (13 * self.height) / 10
-        self.position = Vector2(x + (26 * wizard.length) / 29, y + (12.5 * wizard.height) / 30 - self.height / 2)
+        self.width = (13 * self.height) / 10
+        self.position = Vector2(x + (26 * wizard.width) / 29, y + (12.5 * wizard.height) / 30 - self.height / 2)
         huge_projectile_sprite = pygame.transform.scale(assets.sprite("wizard_projectile.png"),
-                                                        (self.length, self.height))
+                                                        (self.width, self.height))
         self.__sprite = self.attach_component(make_sprite(huge_projectile_sprite, (self.position.x, self.position.y)))
         self.__collision = self.attach_component(CollisionHitBox(follow_sprite_rect=True, draw_box=False))
         self.trail = WizardProjectileTrailEntity(self.position.x, self.position.y, self)
@@ -220,10 +220,10 @@ class WizardProjectileTrailEntity(Entity):
         super().__init__()
         self.projectile = projectile
         self.height = (12 * projectile.height) / 10
-        self.length = (30 * projectile.length) / 13
-        self.position = Vector2(x - (16 * self.length) // 30, y - self.height // 12)
+        self.width = (30 * projectile.width) / 13
+        self.position = Vector2(x - (16 * self.width) // 30, y - self.height // 12)
         huge_projectile_trail_sprite = pygame.transform.scale(assets.sprite("wizard_projectile_trail.png"),
-                                                              (self.length,
+                                                              (self.width,
                                                                self.height))
         self.__sprite = self.attach_component(
             make_sprite(huge_projectile_trail_sprite, (self.position.x, self.position.y)))
@@ -231,7 +231,7 @@ class WizardProjectileTrailEntity(Entity):
     def _tick(self):
         if self.projectile.is_alive:
             if self.position.x != self.projectile.position.x:
-                self.position.x = self.projectile.position.x - (16 * self.length) / 30
+                self.position.x = self.projectile.position.x - (16 * self.width) / 30
         else:
             game.world.destroy_entity(self)
 
@@ -286,8 +286,8 @@ class EldenWizardEntity(Entity):
         self.moving_direction = None  # if the Coin move in the x or y axe
         self.moving_speed = 1
         self.height = 149
-        self.length = 79
-        self.huge_coin_sprite = pygame.transform.scale(assets.sprite("elden_wizard.png"), (self.length, self.height))
+        self.width = 79
+        self.huge_coin_sprite = pygame.transform.scale(assets.sprite("elden_wizard.png"), (self.width, self.height))
         self.__sprite = self.attach_component(make_sprite(self.huge_coin_sprite, (self.position.x, self.position.y)))
         self.__collision = self.attach_component(CollisionHitBox(follow_sprite_rect=True, draw_box=False))
 
@@ -439,16 +439,16 @@ class EldenWizardProjectileEntity(Entity, ReactsToCollisions):
     def __init__(self, x, y, wizard, size: tuple = (12, 30), mode=1):
         super().__init__()
         self.type = mode
-        self.height, self.length = size
+        self.height, self.width = size
         self.position = Vector2(x, y)
 
         huge_projectile_sprite = None
         if self.type == 1:
             huge_projectile_sprite = pygame.transform.scale(assets.sprite("elden_wizard_safe_projectile.png"),
-                                                            (self.length, self.height))
+                                                            (self.width, self.height))
         elif self.type == 2:
             huge_projectile_sprite = pygame.transform.scale(assets.sprite("elden_wizard_lethal_projectile.png"),
-                                                            (self.length, self.height))
+                                                            (self.width, self.height))
         self.__sprite = self.attach_component(make_sprite(huge_projectile_sprite, (self.position.x, self.position.y)))
         self.__collision = self.attach_component(CollisionHitBox(follow_sprite_rect=True, draw_box=False))
 
@@ -474,10 +474,10 @@ class EldenWizardCrystalShieldEntity(Entity):
         self.radiant = math.pi
         self.position = Vector2(x, y)
         # self.original_position = self.position
-        self.height = 20
-        self.length = 21
+        self.height = 30
+        self.width = 31.5
         self.huge_coin_sprite = pygame.transform.scale(assets.sprite("elden_wizard_crystal_shield.png"),
-                                                       (self.height, self.length))
+                                                       (self.height, self.width))
         self.__sprite = self.attach_component(make_sprite(self.huge_coin_sprite, (self.position.x, self.position.y)))
         self.__collision = self.attach_component(CollisionHitBox(follow_sprite_rect=True, draw_box=False))
 
@@ -489,8 +489,19 @@ class EldenWizardCrystalShieldEntity(Entity):
             self.destroy()
         self.radiant -= self.elden_wizard.crystal_speed * game.delta_time
         self.position = self.elden_wizard.position.x + math.cos(
-            self.radiant) * 120 + 33 - self.length // 2, self.elden_wizard.position.y + math.sin(
+            self.radiant) * 120 + 33 - self.width // 2, self.elden_wizard.position.y + math.sin(
             self.radiant) * 120 + 79 - self.height // 2
+
+
+class EldenWizardShieldEntity(Entity):
+    def __init__(self, x, y, wizard):
+        super().__init__()
+        self.position = Vector2(x, y)
+        self.height, self.width = 240, 240
+        self.huge_coin_sprite = pygame.transform.scale(assets.sprite("elden_wizard_shield.png"), (self.width,
+                                                                                                  self.height))
+        self.__sprite = self.attach_component(make_sprite(self.huge_coin_sprite, (self.position.x, self.position.y)))
+        self.__collision = self.attach_component(CollisionHitBox(follow_sprite_rect=True, draw_box=False))
 
 
 class EldenWizardHealthBar(Entity):
@@ -499,19 +510,19 @@ class EldenWizardHealthBar(Entity):
         self.elden_wizard = elden_wizard
         self.position = Vector2(x, y)
         self.height = 21
-        self.length = 700
-        self.length_max = self.length  # for the proportion
-        self.huge_bar_sprite = pygame.transform.scale(assets.sprite("barre_pv_boss(temporaire).png"), (self.length,
+        self.width = 700
+        self.width_max = self.width  # for the proportion
+        self.huge_bar_sprite = pygame.transform.scale(assets.sprite("barre_pv_boss(temporaire).png"), (self.width,
                                                                                                        self.height))
         self.__sprite = self.attach_component(
             KelvinSprite(self.huge_bar_sprite, (self.position.x, self.position.y), layer=300))
 
     def _tick(self):
-        if (self.elden_wizard.pv / self.elden_wizard.pv_max) != (self.length / self.length_max):
-            self.length = (self.elden_wizard.pv * self.length_max) / self.elden_wizard.pv_max
+        if (self.elden_wizard.pv / self.elden_wizard.pv_max) != (self.width / self.width_max):
+            self.width = (self.elden_wizard.pv * self.width_max) / self.elden_wizard.pv_max
 
             # reload the sprite
-            self.__sprite.image = pygame.transform.scale(assets.sprite("barre_pv_boss(temporaire).png"), (self.length,
+            self.__sprite.image = pygame.transform.scale(assets.sprite("barre_pv_boss(temporaire).png"), (self.width,
                                                                                                           self.height))
             self.__sprite.dirty = 1
 
