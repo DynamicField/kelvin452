@@ -158,7 +158,7 @@ class WizardCoinEntity(Entity):
         self.width = (29 * self.height) // 30
         self.huge_coin_sprite = pygame.transform.scale(assets.sprite("wizard_coin.png"), (self.width, self.height))
         self.__sprite = self.attach_component(make_sprite(self.huge_coin_sprite, (self.position.x, self.position.y)))
-        self.__collision = self.attach_component((CollisionHitBox(offset=pygame.Rect(0, 0, self.width, self.width),
+        self.__collision = self.attach_component((CollisionHitBox(offset=pygame.Rect(0, 0, self.width, self.height),
                                                                   follow_sprite_rect=True, draw_box=False)))
 
     def dragon_touch(self, damage):
@@ -204,8 +204,8 @@ class WizardProjectileEntity(Entity, ReactsToCollisions):
                                                         (self.width, self.height))
         self.__sprite = self.attach_component(make_sprite(huge_projectile_sprite, (self.position.x, self.position.y)))
         self.__collision = self.attach_component(
-            CollisionHitBox(offset=pygame.Rect((16 * self.width) / 30, (2 * self.height) / 12, (12 * self.height) / 10,
-                                               (wizard.height // 2)), follow_sprite_rect=True, draw_box=False))
+            CollisionHitBox(offset=pygame.Rect((17 * self.width) / 30, (2 * self.height) / 12, (9 * self.width) / 30,
+                                               (8 * self.height) / 12), follow_sprite_rect=True, draw_box=False))
 
     def _tick(self):
         self.position.x += 600 * game.delta_time
@@ -272,7 +272,8 @@ class EldenWizardEntity(Entity):
         self.width = 79
         self.huge_coin_sprite = pygame.transform.scale(assets.sprite("elden_wizard.png"), (self.width, self.height))
         self.__sprite = self.attach_component(make_sprite(self.huge_coin_sprite, (self.position.x, self.position.y)))
-        self.__collision = self.attach_component(CollisionHitBox(follow_sprite_rect=True, draw_box=False))
+        self.__collision = self.attach_component(
+            CollisionHitBox(offset=pygame.Rect(0, 0, self.width, self.height), follow_sprite_rect=True, draw_box=True))
 
         # spawning health bar
         self.health_bar = EldenWizardHealthBar(self)
@@ -293,9 +294,6 @@ class EldenWizardEntity(Entity):
         elif self.pv / self.pv_max < 0.25:
             self.phase_four()
 
-    def moving_goal(self):
-        self.move_goal, self.moving_direction = (random.randint(0, 575), random.randint(100, 500)), random.randint(1, 2)
-
     def phase_one(self):
         # start the phase one
         if self.phase != 1:
@@ -305,6 +303,9 @@ class EldenWizardEntity(Entity):
 
         # this one is for utilities in the phase (x or y and move goal currently)
 
+    def moving_goal(self):
+        self.move_goal, self.moving_direction = (random.randint(0, 575), random.randint(100, 500)), random.randint(1, 2)
+
     def phase_two(self):
         # start the phase two
         if self.phase != 2:
@@ -312,6 +313,9 @@ class EldenWizardEntity(Entity):
             self.crystal_number = 3
             self.crystal_counter = self.crystal_number
             self.set_cooldown(2)
+
+    def crystal_verification(self):  # it will check if at least one crystal is alive or not
+        return len(game.world.get_entities(EldenWizardCrystalShieldEntity)) > 0
 
     def phase_three(self):
         self.phase = 3
@@ -412,7 +416,13 @@ class EldenWizardEntity(Entity):
 
                 if self.crystal_counter == 0:
                     self.shield_cooldown = 5
+                    if self.crystal_number < 5:
+                        self.crystal_number += 1
                     self.crystal_counter = self.crystal_number
+                    self.shield = EldenWizardShieldEntity(self.position.x, self.position.y, self)
+                    game.world.spawn_entity(self.shield)
+            elif not self.crystal_verification():
+                self.shield_cooldown -= game.delta_time
 
     def set_cooldown(self, value):
         self.shoot_cooldown = value
@@ -433,7 +443,9 @@ class EldenWizardProjectileEntity(Entity, ReactsToCollisions):
             huge_projectile_sprite = pygame.transform.scale(assets.sprite("elden_wizard_lethal_projectile.png"),
                                                             (self.width, self.height))
         self.__sprite = self.attach_component(make_sprite(huge_projectile_sprite, (self.position.x, self.position.y)))
-        self.__collision = self.attach_component(CollisionHitBox(follow_sprite_rect=True, draw_box=False))
+        self.__collision = self.attach_component(
+            CollisionHitBox(offset=pygame.Rect((17 * self.width) / 30, (2 * self.height) / 12, (9 * self.width) / 30,
+                                               (8 * self.height) / 12), follow_sprite_rect=True, draw_box=False))
 
     def _tick(self):
         self.position.x += 600 * game.delta_time
@@ -462,7 +474,8 @@ class EldenWizardCrystalShieldEntity(Entity):
         self.huge_coin_sprite = pygame.transform.scale(assets.sprite("elden_wizard_crystal_shield.png"),
                                                        (self.height, self.width))
         self.__sprite = self.attach_component(make_sprite(self.huge_coin_sprite, (self.position.x, self.position.y)))
-        self.__collision = self.attach_component(CollisionHitBox(follow_sprite_rect=True, draw_box=False))
+        self.__collision = self.attach_component(
+            CollisionHitBox(offset=pygame.Rect(0, 0, self.width, self.height), follow_sprite_rect=True, draw_box=False))
 
     def dragon_touch(self, damage):
         self.pv -= damage
@@ -476,15 +489,26 @@ class EldenWizardCrystalShieldEntity(Entity):
             self.radiant) * 120 + 79 - self.height // 2
 
 
-class EldenWizardShieldEntity(Entity):
+class EldenWizardShieldEntity(Entity, ReactsToCollisions):
     def __init__(self, x, y, wizard):
         super().__init__()
+        self.wizard = wizard
         self.position = Vector2(x, y)
         self.height, self.width = 240, 240
         self.huge_coin_sprite = pygame.transform.scale(assets.sprite("elden_wizard_shield.png"), (self.width,
                                                                                                   self.height))
-        self.__sprite = self.attach_component(make_sprite(self.huge_coin_sprite, (self.position.x, self.position.y)))
-        self.__collision = self.attach_component(CollisionHitBox(follow_sprite_rect=True, draw_box=False))
+        self.__sprite = self.attach_component(
+            KelvinSprite(self.huge_coin_sprite, (self.position.x, self.position.y), layer=150))
+        self.__collision = self.attach_component(
+            CollisionHitBox(offset=pygame.Rect(0, 0, self.width, self.height), follow_sprite_rect=True, draw_box=True))
+
+    def _tick(self):
+        self.position.x = self.wizard.position.x + (33 - self.width / 2)
+        self.position.y = self.wizard.position.y + (79 - self.height / 2)
+
+    def _on_collide(self, other: Entity):
+        if isinstance(other, DragonEntity):
+            game.world.destroy_entity(other)
 
 
 class EldenWizardHealthBar(Entity):
