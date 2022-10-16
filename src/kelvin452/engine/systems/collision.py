@@ -85,14 +85,14 @@ class CollisionHitBox(EntityComponent):
 
     __slots__ = ("__follow_sprite_rect", "__rect", "__rect_set", "ongoing_collisions", "draw_box", "margin")
 
-    def __init__(self, follow_sprite_rect: bool, draw_box=False, margin: Vector2 = Vector2(0, 0)):
+    def __init__(self, follow_sprite_rect: bool, draw_box=False, offset: pygame.Rect = pygame.Rect(0, 0, 0, 0)):
         """
         Crée une nouvelle hit box, ne pas oublier d'attacher le composant avec
         ``self.attach_component(...)`` !!
 
         :param follow_sprite_rect: Si la hit box doit être la même que celle du sprite.
         :param draw_box: Si une boite rouge doit être dessinée pour représenter la hitbox (debug).
-        :param margin: La marge de taille du sprite (largeur, hauteur)
+        :param offset: La marge de la hit box
         """
         super().__init__()
         self.__follow_sprite_rect = follow_sprite_rect
@@ -100,7 +100,7 @@ class CollisionHitBox(EntityComponent):
         self.__rect_set = False
         self.ongoing_collisions: Set['CollisionHitBox'] = set()
         self.draw_box = draw_box
-        self.margin = margin
+        self.offset = offset
 
     @property
     def rect(self) -> Rect:
@@ -114,8 +114,11 @@ class CollisionHitBox(EntityComponent):
     def _entity_tick(self, entity: Entity):
         if self.__follow_sprite_rect and not self.__rect_set:
             sprite = entity.get_component(KelvinSprite)
-            if sprite is not None and sprite.rect != self.rect:
-                self.rect = sprite.rect.inflate(*self.margin)
+            if sprite is not None:
+                adjusted_rect = sprite.rect.move(self.offset.x, self.offset.y)
+                adjusted_rect.width = self.offset.width
+                adjusted_rect.height = self.offset.height
+                self.rect = adjusted_rect
         if self.__rect_set:
             game.collision.refresh_hit_box(self)
             self.__rect_set = False

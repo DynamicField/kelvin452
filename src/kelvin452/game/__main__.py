@@ -27,7 +27,8 @@ class FireEntity(Entity, EventConsumer):
         self.timer = 0.1
         self.huge_fire_sprite = pygame.transform.scale(assets.sprite("fire.png"), (90, 90))
         self.__sprite = self.attach_component(make_sprite(self.huge_fire_sprite, (x, y)))
-        self.__collision = self.attach_component(CollisionHitBox(follow_sprite_rect=True, draw_box=False))
+        self.__collision = self.attach_component(
+            CollisionHitBox(offset=pygame.Rect(0, 0, 90, 90), follow_sprite_rect=True, draw_box=False))
         self.click_allowed = False
 
     def add_y(self, add):  # add is the value we add in position y value, for example y == 10, add_y(10) put y at 20
@@ -76,7 +77,8 @@ class DragonEntity(Entity, ReactsToCollisions):
         self.position = Vector2(x, y)
         huge_dragon_sprite = pygame.transform.scale(assets.sprite("dragon.png"), (60, 43))
         self.__sprite = self.attach_component(make_sprite(huge_dragon_sprite, (x, y)))
-        self.__collision = self.attach_component(CollisionHitBox(follow_sprite_rect=True, draw_box=False))
+        self.__collision = self.attach_component(
+            CollisionHitBox(offset=pygame.Rect(0, 0, 60, 43), follow_sprite_rect=True, draw_box=False))
 
     def _tick(self):
         self.position.x -= 600 * game.delta_time
@@ -125,7 +127,8 @@ class ClassicCoinEntity(Entity):
         self.size = random.randint(32, 64)
         self.huge_coin_sprite = pygame.transform.scale(assets.sprite("classic_coin.png"), (self.size, self.size))
         self.__sprite = self.attach_component(make_sprite(self.huge_coin_sprite, (self.position.x, self.position.y)))
-        self.__collision = self.attach_component(CollisionHitBox(follow_sprite_rect=True, draw_box=False))
+        self.__collision = self.attach_component(
+            CollisionHitBox(offset=pygame.Rect(0, 0, self.size, self.size), follow_sprite_rect=True, draw_box=False))
 
     def dragon_touch(self, damage):
         self.pv -= damage
@@ -155,7 +158,8 @@ class WizardCoinEntity(Entity):
         self.width = (29 * self.height) // 30
         self.huge_coin_sprite = pygame.transform.scale(assets.sprite("wizard_coin.png"), (self.width, self.height))
         self.__sprite = self.attach_component(make_sprite(self.huge_coin_sprite, (self.position.x, self.position.y)))
-        self.__collision = self.attach_component((CollisionHitBox(follow_sprite_rect=True, draw_box=False)))
+        self.__collision = self.attach_component((CollisionHitBox(offset=pygame.Rect(0, 0, self.width, self.width),
+                                                                  follow_sprite_rect=True, draw_box=False)))
 
     def dragon_touch(self, damage):
         self.pv -= damage
@@ -199,10 +203,9 @@ class WizardProjectileEntity(Entity, ReactsToCollisions):
         huge_projectile_sprite = pygame.transform.scale(assets.sprite("wizard_projectile.png"),
                                                         (self.width, self.height))
         self.__sprite = self.attach_component(make_sprite(huge_projectile_sprite, (self.position.x, self.position.y)))
-        self.__collision = self.attach_component(CollisionHitBox(follow_sprite_rect=True, draw_box=False))
-        self.trail = WizardProjectileTrailEntity(self.position.x, self.position.y, self)
-        self.trail.projectile = self
-        game.world.spawn_entity(self.trail)
+        self.__collision = self.attach_component(
+            CollisionHitBox(offset=pygame.Rect((16 * self.width) / 30, (2 * self.height) / 12, (12 * self.height) / 10,
+                                               (wizard.height // 2)), follow_sprite_rect=True, draw_box=False))
 
     def _tick(self):
         self.position.x += 600 * game.delta_time
@@ -212,27 +215,6 @@ class WizardProjectileEntity(Entity, ReactsToCollisions):
 
     def _on_collide(self, other: Entity):
         if isinstance(other, FireEntity):
-            game.world.destroy_entity(self)
-
-
-class WizardProjectileTrailEntity(Entity):
-    def __init__(self, x, y, projectile):
-        super().__init__()
-        self.projectile = projectile
-        self.height = (12 * projectile.height) / 10
-        self.width = (30 * projectile.width) / 13
-        self.position = Vector2(x - (16 * self.width) // 30, y - self.height // 12)
-        huge_projectile_trail_sprite = pygame.transform.scale(assets.sprite("wizard_projectile_trail.png"),
-                                                              (self.width,
-                                                               self.height))
-        self.__sprite = self.attach_component(
-            make_sprite(huge_projectile_trail_sprite, (self.position.x, self.position.y)))
-
-    def _tick(self):
-        if self.projectile.is_alive:
-            if self.position.x != self.projectile.position.x:
-                self.position.x = self.projectile.position.x - (16 * self.width) / 30
-        else:
             game.world.destroy_entity(self)
 
 
@@ -246,7 +228,8 @@ class KnightCoinEntity(Entity):
         self.size = random.randint(32, 64)
         self.huge_coin_sprite = pygame.transform.scale(assets.sprite("armored_knight_coin.png"), (self.size, self.size))
         self.__sprite = self.attach_component(make_sprite(self.huge_coin_sprite, (self.position.x, self.position.y)))
-        self.__collision = self.attach_component((CollisionHitBox(follow_sprite_rect=True, draw_box=False)))
+        self.__collision = self.attach_component(
+            (CollisionHitBox(offset=pygame.Rect(0, 0, self.size, self.size), follow_sprite_rect=True, draw_box=False)))
 
     def dragon_touch(self, damage):
         self.pv -= damage
@@ -826,7 +809,6 @@ def game_start():
     game.world.spawn_entity(life.LifeText())
     elden_wizard = EldenWizardEntity(600, 315)
     game.world.spawn_entity(elden_wizard)
-
     fire_entity = FireEntity(1024, 315)
     game.world.spawn_entity(fire_entity)
 
