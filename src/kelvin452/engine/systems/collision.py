@@ -41,22 +41,31 @@ class CollisionSystem(System):
                 if hit_box.is_destroyed or other_hit_box.is_destroyed or hit_box == other_hit_box:
                     continue
                 if hit_box.type == 1:
-                    if hit_box.rect.colliderect(other_hit_box.rect):
-                        self.on_collide(hit_box, other_hit_box)
-                    elif len(hit_box.ongoing_collisions) > 0:
-                        self.clear_ongoing_collisions(hit_box, other_hit_box)
+                    if other_hit_box.type == 1:
+                        if hit_box.rect.colliderect(other_hit_box.rect):
+                            self.on_collide(hit_box, other_hit_box)
+                        elif len(hit_box.ongoing_collisions) > 0:
+                            self.clear_ongoing_collisions(hit_box, other_hit_box)
+                    elif other_hit_box.type == 2:
+                        dx = sqrt((other_hit_box.attached_entity.center_position.x / 2 - hit_box.rect.x) ** 2)
+                        dy = sqrt((other_hit_box.attached_entity.center_position.y / 2 - hit_box.rect.y) ** 2)
+                        if dx < hit_box.rect.width / 2 + other_hit_box.circle \
+                                or dy < hit_box.rect.height / 2 + other_hit_box.circle:
+                            self.on_collide(hit_box, other_hit_box)
+                        elif len(hit_box.ongoing_collisions) > 0:
+                            self.clear_ongoing_collisions(hit_box, other_hit_box)
                 elif hit_box.type == 2:
                     if other_hit_box.type == 1:
                         dx = sqrt(
-                            (hit_box.attached_entity.position.x / 2 - other_hit_box.rect.x) ** 2)
-                        dy = sqrt((hit_box.attached_entity.position.y / 2 - other_hit_box.rect.y) ** 2)
+                            (hit_box.attached_entity.center_position.x- other_hit_box.rect.x) ** 2)
+                        dy = sqrt((hit_box.attached_entity.center_position.y - other_hit_box.rect.y) ** 2)
                         if dx < other_hit_box.rect.width / 2 + hit_box.circle or dy < other_hit_box.rect.height / 2 + hit_box.circle:
                             self.on_collide(hit_box, other_hit_box)
                         elif len(hit_box.ongoing_collisions) > 0:
                             self.clear_ongoing_collisions(hit_box, other_hit_box)
                     elif other_hit_box.type == 2:
-                        dx = hit_box.attached_entity.position.x / 2 - other_hit_box.attached_entity.position.x / 2
-                        dy = hit_box.attached_entity.position.y / 2 - other_hit_box.attached_entity.position.y / 2
+                        dx = hit_box.attached_entity.center_position.x - other_hit_box.attached_entity.position.x / 2
+                        dy = hit_box.attached_entity.center_position.y - other_hit_box.attached_entity.position.y / 2
                         distance = sqrt(dx ** 2 + dy ** 2)
                         if distance < hit_box.circle + other_hit_box.circle:
                             self.on_collide(hit_box, other_hit_box)
@@ -167,7 +176,12 @@ class CollisionHitBox(EntityComponent):
         # Rouge = normal
         # Violet = collision
         color = (255, 0, 0) if len(self.ongoing_collisions) == 0 else (128, 0, 128)
-        pygame.draw.rect(pygame.display.get_surface(), color, self.rect, 2)
+        if self.type == 1:
+            pygame.draw.rect(pygame.display.get_surface(), color, self.rect, 2)
+        if self.type == 2:
+            pygame.draw.circle(pygame.display.get_surface(), color,
+                               (self.attached_entity.center_position.x, self.attached_entity.center_position.y),
+                               self.circle, 2)
 
 
 class CollisionListener(Component):

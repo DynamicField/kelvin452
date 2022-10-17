@@ -125,7 +125,10 @@ class ClassicCoinEntity(Entity):
         self.reward = 1
         self.position = Vector2(x, y)
         self.size = random.randint(32, 64)
-        self.huge_coin_sprite = pygame.transform.scale(assets.sprite("classic_coin.png"), (self.size, self.size))
+        self.height = self.size
+        self.width = self.size
+        self.center_position = Vector2(x + self.width / 2, y + self.height / 2)
+        self.huge_coin_sprite = pygame.transform.scale(assets.sprite("classic_coin.png"), (self.width, self.height))
         self.__sprite = self.attach_component(make_sprite(self.huge_coin_sprite, (self.position.x, self.position.y)))
         self.__collision = self.attach_component(
             CollisionHitBox(offset=pygame.Rect(0, 0, self.size, self.size), follow_sprite_rect=True, draw_box=False))
@@ -500,11 +503,13 @@ class EldenWizardShieldEntity(Entity, ReactsToCollisions):
         self.__sprite = self.attach_component(
             KelvinSprite(self.huge_coin_sprite, (self.position.x, self.position.y), layer=150))
         self.__collision = self.attach_component(
-            CollisionHitBox(offset=pygame.Rect(0, 0, self.width, self.height), follow_sprite_rect=True, draw_box=True))
+            CollisionHitBox(offset=pygame.Rect(0, 0, self.width, self.height), type=2, radius=self.width / 2,
+                            follow_sprite_rect=True, draw_box=True))
 
     def _tick(self):
         self.position.x = self.wizard.position.x + (33 - self.width / 2)
         self.position.y = self.wizard.position.y + (79 - self.height / 2)
+        self.center_position = Vector2(self.position.x + self.width / 2, self.position.y + self.height / 2)
 
     def _on_collide(self, other: Entity):
         if isinstance(other, DragonEntity):
