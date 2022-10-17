@@ -78,7 +78,7 @@ class DragonEntity(Entity, ReactsToCollisions):
         huge_dragon_sprite = pygame.transform.scale(assets.sprite("dragon.png"), (60, 43))
         self.__sprite = self.attach_component(make_sprite(huge_dragon_sprite, (x, y)))
         self.__collision = self.attach_component(
-            CollisionHitBox(offset=pygame.Rect(0, 0, 60, 43), follow_sprite_rect=True, draw_box=False))
+            CollisionHitBox(offset=pygame.Rect(0, 0, 60, 43), follow_sprite_rect=True, draw_box=True))
 
     def _tick(self):
         self.position.x -= 600 * game.delta_time
@@ -498,6 +498,7 @@ class EldenWizardShieldEntity(Entity, ReactsToCollisions):
         self.wizard = wizard
         self.position = Vector2(x, y)
         self.height, self.width = 240, 240
+        self.center_position = Vector2(self.position.x + self.width / 2, self.position.y + self.height / 2)
         self.huge_coin_sprite = pygame.transform.scale(assets.sprite("elden_wizard_shield.png"), (self.width,
                                                                                                   self.height))
         self.__sprite = self.attach_component(

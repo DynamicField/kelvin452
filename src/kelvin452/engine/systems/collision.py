@@ -47,19 +47,18 @@ class CollisionSystem(System):
                         elif len(hit_box.ongoing_collisions) > 0:
                             self.clear_ongoing_collisions(hit_box, other_hit_box)
                     elif other_hit_box.type == 2:
-                        dx = sqrt((other_hit_box.attached_entity.center_position.x / 2 - hit_box.rect.x) ** 2)
-                        dy = sqrt((other_hit_box.attached_entity.center_position.y / 2 - hit_box.rect.y) ** 2)
-                        if dx < hit_box.rect.width / 2 + other_hit_box.circle \
-                                or dy < hit_box.rect.height / 2 + other_hit_box.circle:
+                        dx = sqrt((hit_box.rect.x + hit_box.rect.width / 2 - other_hit_box.attached_entity.center_position.x) ** 2)
+                        dy = sqrt((hit_box.rect.y + hit_box.rect.height / 2 - other_hit_box.attached_entity.center_position.y) ** 2)
+                        if (dx <= other_hit_box.circle + hit_box.rect.width) and (
+                                dy <= other_hit_box.circle + hit_box.rect.height):
                             self.on_collide(hit_box, other_hit_box)
                         elif len(hit_box.ongoing_collisions) > 0:
                             self.clear_ongoing_collisions(hit_box, other_hit_box)
                 elif hit_box.type == 2:
                     if other_hit_box.type == 1:
-                        dx = sqrt(
-                            (hit_box.attached_entity.center_position.x- other_hit_box.rect.x) ** 2)
-                        dy = sqrt((hit_box.attached_entity.center_position.y - other_hit_box.rect.y) ** 2)
-                        if dx < other_hit_box.rect.width / 2 + hit_box.circle or dy < other_hit_box.rect.height / 2 + hit_box.circle:
+                        dx = sqrt((other_hit_box.rect.x + other_hit_box.rect.width / 2 - hit_box.attached_entity.center_position.x)**2)
+                        dy = sqrt((other_hit_box.rect.y + other_hit_box.rect.height/2 - hit_box.attached_entity.center_position.y)**2)
+                        if (dx <= hit_box.circle + other_hit_box.rect.width) and (dy <= hit_box.circle + other_hit_box.rect.height):
                             self.on_collide(hit_box, other_hit_box)
                         elif len(hit_box.ongoing_collisions) > 0:
                             self.clear_ongoing_collisions(hit_box, other_hit_box)
