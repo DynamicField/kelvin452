@@ -3,6 +3,7 @@ from typing import *
 
 import pygame.draw
 from pygame import Rect, Vector2
+from math import sqrt
 
 from kelvin452.engine.game import game
 from kelvin452.engine.systems.base import System, Component
@@ -39,10 +40,28 @@ class CollisionSystem(System):
             for other_hit_box in self.__all_hitboxes.copy():
                 if hit_box.is_destroyed or other_hit_box.is_destroyed or hit_box == other_hit_box:
                     continue
-                if hit_box.rect.colliderect(other_hit_box.rect):
-                    self.on_collide(hit_box, other_hit_box)
-                elif len(hit_box.ongoing_collisions) > 0:
-                    self.clear_ongoing_collisions(hit_box, other_hit_box)
+                if hit_box.type == 1:
+                    if hit_box.rect.colliderect(other_hit_box.rect):
+                        self.on_collide(hit_box, other_hit_box)
+                    elif len(hit_box.ongoing_collisions) > 0:
+                        self.clear_ongoing_collisions(hit_box, other_hit_box)
+                elif hit_box.type == 2:
+                    if other_hit_box.type == 1:
+                        dx = sqrt(
+                            (hit_box.attached_entity.position.x / 2 - other_hit_box.rect.x) ** 2)
+                        dy = sqrt((hit_box.attached_entity.position.y / 2 - other_hit_box.rect.y) ** 2)
+                        if dx < other_hit_box.rect.width / 2 + hit_box.circle or dy < other_hit_box.rect.height / 2 + hit_box.circle:
+                            self.on_collide(hit_box, other_hit_box)
+                        elif len(hit_box.ongoing_collisions) > 0:
+                            self.clear_ongoing_collisions(hit_box, other_hit_box)
+                    elif other_hit_box.type == 2:
+                        dx = hit_box.attached_entity.position.x / 2 - other_hit_box.attached_entity.position.x / 2
+                        dy = hit_box.attached_entity.position.y / 2 - other_hit_box.attached_entity.position.y / 2
+                        distance = sqrt(dx ** 2 + dy ** 2)
+                        if distance < hit_box.circle + other_hit_box.circle:
+                            self.on_collide(hit_box, other_hit_box)
+                        elif len(hit_box.ongoing_collisions) > 0:
+                            self.clear_ongoing_collisions(hit_box, other_hit_box)
 
         self.__refreshed_hit_boxes.clear()
         # On retire toutes les hitbox après pour éviter des conflits
@@ -85,7 +104,8 @@ class CollisionHitBox(EntityComponent):
 
     __slots__ = ("__follow_sprite_rect", "__rect", "__rect_set", "ongoing_collisions", "draw_box", "margin")
 
-    def __init__(self, follow_sprite_rect: bool, draw_box=False, offset: pygame.Rect = pygame.Rect(0, 0, 0, 0)):
+    def __init__(self, follow_sprite_rect: bool, draw_box=False, offset: pygame.Rect = pygame.Rect(0, 0, 0, 0),
+                 type=1, radius=1):
         """
         Crée une nouvelle hit box, ne pas oublier d'attacher le composant avec
         ``self.attach_component(...)`` !!
@@ -98,6 +118,8 @@ class CollisionHitBox(EntityComponent):
         self.__follow_sprite_rect = follow_sprite_rect
         self.__rect = Rect(0, 0, 0, 0)
         self.__rect_set = False
+        self.circle = radius
+        self.type = type  # type of the hitbox, 1 -> rect, 2 -> circle
         self.ongoing_collisions: Set['CollisionHitBox'] = set()
         self.draw_box = draw_box
         self.offset = offset
