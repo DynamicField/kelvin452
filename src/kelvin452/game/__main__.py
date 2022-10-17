@@ -66,7 +66,7 @@ class FireEntity(Entity, EventConsumer):
             dragon_entity = DragonEntity(self.powers.coins_pierced, self.powers.damage, self.position.x,
                                          self.position.y + 30)
             game.world.spawn_entity(dragon_entity)
-            self.timer = self.powers.fire_rate
+            self.timer = 0.05 # self.powers.fire_rate
 
 
 class DragonEntity(Entity, ReactsToCollisions):
@@ -265,7 +265,7 @@ class EldenWizardEntity(Entity):
         self.wait_time = 0  # it's the timer for the placement of the crystal in the circle
         self.timer = self.shoot_cooldown
         self.phase = 1
-        self.pv = 4
+        self.pv = 10
         self.pv_max = self.pv
         self.position = Vector2(x, y)
         self.move_goal = self.position
