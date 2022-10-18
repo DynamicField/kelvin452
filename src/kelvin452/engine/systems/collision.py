@@ -71,17 +71,18 @@ class CollisionSystem(System):
                                    / 2 - other_hit_box.attached_entity.center_position.y) ** 2)
                         if (dx <= other_hit_box.circle + hit_box.rect.width) and \
                                 (dy <= other_hit_box.circle + hit_box.rect.height):
+                            closest_point = self.closet_point(other_hit_box.attached_entity.center_position, hit_box.rect)
                             if ((other_hit_box.attached_entity.center_position.x - other_hit_box.circle
-                                 < (hit_box.rect.x - 1)
+                                 < (hit_box.rect.x + closest_point[0]- 1)
                                  < other_hit_box.attached_entity.center_position.x + other_hit_box.circle)
                                 or (other_hit_box.attached_entity.center_position.x - other_hit_box.circle
-                                    < (hit_box.rect.x + 1)
+                                    < (hit_box.rect.x + closest_point[0] + 1)
                                     < other_hit_box.attached_entity.center_position.x + other_hit_box.circle)) \
                                     and ((other_hit_box.attached_entity.center_position.y - other_hit_box.circle
-                                          < (hit_box.rect.y - 1)
+                                          < (hit_box.rect.y + closest_point[1] - 1)
                                           < other_hit_box.attached_entity.center_position.y + other_hit_box.circle)
                                          or (other_hit_box.attached_entity.center_position.y - other_hit_box.circle
-                                             < (hit_box.rect.y + 1)
+                                             < (hit_box.rect.y + closest_point[1] + 1)
                                              < other_hit_box.attached_entity.center_position.y + other_hit_box.circle)):
                                 # it's : if ((xa-r < xb-1 < xa + r ) or (xa -r<xb+1<xa + r))
                                 # and ((ya-r < yb-1 < ya + r ) or (ya -r<yb+1<ya + r))
@@ -96,17 +97,18 @@ class CollisionSystem(System):
                                    / 2 - hit_box.attached_entity.center_position.y) ** 2)
                         if (dx <= hit_box.circle + other_hit_box.rect.width) \
                                 and (dy <= hit_box.circle + other_hit_box.rect.height):
+                            closest_point = self.closet_point(hit_box.attached_entity.center_position, other_hit_box.rect)
                             if ((hit_box.attached_entity.center_position.x - hit_box.circle
-                                 < (other_hit_box.rect.x - 1)
+                                 < (other_hit_box.rect.x + closest_point[0] - 1)
                                  < hit_box.attached_entity.center_position.x + hit_box.circle)
                                 or (hit_box.attached_entity.center_position.x - hit_box.circle
-                                    < (other_hit_box.rect.x + 1)
+                                    < (other_hit_box.rect.x + closest_point[0] + 1)
                                     < hit_box.attached_entity.center_position.x + hit_box.circle)) \
                                     and ((hit_box.attached_entity.center_position.y - hit_box.circle
-                                          < (other_hit_box.rect.y - 1)
+                                          < (other_hit_box.rect.y + closest_point[1] - 1)
                                           < hit_box.attached_entity.center_position.y + hit_box.circle)
                                          or (hit_box.attached_entity.center_position.y - hit_box.circle
-                                             < (other_hit_box.rect.y + 1)
+                                             < (other_hit_box.rect.y + closest_point[1] + 1)
                                              < hit_box.attached_entity.center_position.y + hit_box.circle)):
 
                                 self.on_collide(hit_box, other_hit_box)
