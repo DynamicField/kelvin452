@@ -33,22 +33,17 @@ class CollisionSystem(System):
     def refresh_hit_box(self, hit_box: 'CollisionHitBox'):
         self.__refreshed_hit_boxes.add(hit_box)
 
-    def closet_point(self, center, rect):  # it returns the coordinate of rect point closest to the center of the circle
-        # the reference is A, it means if the function return (1,5), the point is at rect.x + 1, rect.y+5
-
+    def distance_point_center_cheack(self, center, radius, rect):
         dic = {
-            'a': (0, 0),
-            'b': (rect.width, 0),
-            'c': (0, rect.height),
-            'd': (rect.width, rect.height)
+            'a': (rect.x, rect.y),
+            'b': (rect.x + rect.width, rect.y),
+            'c': (rect.x, rect.y + rect.height),
+            'd': (rect.x + rect.width, rect.y + rect.height)
         }
-        center_value = center.x + center.y
-        min = 'a'  # index of the littlest
         for i in dic:
-            if fabs(dic[i][0] + dic[i][1] - center_value) < fabs(dic[min][0] + dic[min][1] - center_value):
-                min = i
-
-        return dic[min]
+            if sqrt((center.x - dic[i][0]) ** 2 + (center.y - dic[i][1]) ** 2) <= radius:
+                return True
+        return False
 
     def refresh_collisions(self):
         self.__refreshing_collisions = True
@@ -65,55 +60,18 @@ class CollisionSystem(System):
                         elif len(hit_box.ongoing_collisions) > 0:
                             self.clear_ongoing_collisions(hit_box, other_hit_box)
                     elif other_hit_box.type == 2:
-                        dx = sqrt((hit_box.rect.x + hit_box.rect.width
-                                   / 2 - other_hit_box.attached_entity.center_position.x) ** 2)
-                        dy = sqrt((hit_box.rect.y + hit_box.rect.height
-                                   / 2 - other_hit_box.attached_entity.center_position.y) ** 2)
-                        if (dx <= other_hit_box.circle + hit_box.rect.width) and \
-                                (dy <= other_hit_box.circle + hit_box.rect.height):
-                            closest_point = self.closet_point(other_hit_box.attached_entity.center_position, hit_box.rect)
-                            if ((other_hit_box.attached_entity.center_position.x - other_hit_box.circle
-                                 < (hit_box.rect.x + closest_point[0]- 1)
-                                 < other_hit_box.attached_entity.center_position.x + other_hit_box.circle)
-                                or (other_hit_box.attached_entity.center_position.x - other_hit_box.circle
-                                    < (hit_box.rect.x + closest_point[0] + 1)
-                                    < other_hit_box.attached_entity.center_position.x + other_hit_box.circle)) \
-                                    and ((other_hit_box.attached_entity.center_position.y - other_hit_box.circle
-                                          < (hit_box.rect.y + closest_point[1] - 1)
-                                          < other_hit_box.attached_entity.center_position.y + other_hit_box.circle)
-                                         or (other_hit_box.attached_entity.center_position.y - other_hit_box.circle
-                                             < (hit_box.rect.y + closest_point[1] + 1)
-                                             < other_hit_box.attached_entity.center_position.y + other_hit_box.circle)):
-                                # it's : if ((xa-r < xb-1 < xa + r ) or (xa -r<xb+1<xa + r))
-                                # and ((ya-r < yb-1 < ya + r ) or (ya -r<yb+1<ya + r))
-                                self.on_collide(hit_box, other_hit_box)
-                            elif len(hit_box.ongoing_collisions) > 0:
-                                self.clear_ongoing_collisions(hit_box, other_hit_box)
+                        if self.distance_point_center_cheack(other_hit_box.attached_entity.center_position,
+                                                             other_hit_box.circle, hit_box.rect):
+                            self.on_collide(hit_box, other_hit_box)
+                        elif len(hit_box.ongoing_collisions) > 0:
+                            self.clear_ongoing_collisions(hit_box, other_hit_box)
                 elif hit_box.type == 2:
                     if other_hit_box.type == 1:
-                        dx = sqrt((other_hit_box.rect.x + other_hit_box.rect.width
-                                   / 2 - hit_box.attached_entity.center_position.x) ** 2)
-                        dy = sqrt((other_hit_box.rect.y + other_hit_box.rect.height
-                                   / 2 - hit_box.attached_entity.center_position.y) ** 2)
-                        if (dx <= hit_box.circle + other_hit_box.rect.width) \
-                                and (dy <= hit_box.circle + other_hit_box.rect.height):
-                            closest_point = self.closet_point(hit_box.attached_entity.center_position, other_hit_box.rect)
-                            if ((hit_box.attached_entity.center_position.x - hit_box.circle
-                                 < (other_hit_box.rect.x + closest_point[0] - 1)
-                                 < hit_box.attached_entity.center_position.x + hit_box.circle)
-                                or (hit_box.attached_entity.center_position.x - hit_box.circle
-                                    < (other_hit_box.rect.x + closest_point[0] + 1)
-                                    < hit_box.attached_entity.center_position.x + hit_box.circle)) \
-                                    and ((hit_box.attached_entity.center_position.y - hit_box.circle
-                                          < (other_hit_box.rect.y + closest_point[1] - 1)
-                                          < hit_box.attached_entity.center_position.y + hit_box.circle)
-                                         or (hit_box.attached_entity.center_position.y - hit_box.circle
-                                             < (other_hit_box.rect.y + closest_point[1] + 1)
-                                             < hit_box.attached_entity.center_position.y + hit_box.circle)):
-
-                                self.on_collide(hit_box, other_hit_box)
-                            elif len(hit_box.ongoing_collisions) > 0:
-                                self.clear_ongoing_collisions(hit_box, other_hit_box)
+                        if self.distance_point_center_cheack(hit_box.attached_entity.center_position, hit_box.circle,
+                                                             other_hit_box.rect):
+                            self.on_collide(hit_box, other_hit_box)
+                        elif len(hit_box.ongoing_collisions) > 0:
+                            self.clear_ongoing_collisions(hit_box, other_hit_box)
                     elif other_hit_box.type == 2:
                         dx = hit_box.attached_entity.center_position.x - other_hit_box.attached_entity.position.x / 2
                         dy = hit_box.attached_entity.center_position.y - other_hit_box.attached_entity.position.y / 2
