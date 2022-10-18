@@ -66,7 +66,7 @@ class FireEntity(Entity, EventConsumer):
             dragon_entity = DragonEntity(self.powers.coins_pierced, self.powers.damage, self.position.x,
                                          self.position.y + 30)
             game.world.spawn_entity(dragon_entity)
-            self.timer = 0.05 # self.powers.fire_rate
+            self.timer = self.powers.fire_rate
 
 
 class DragonEntity(Entity, ReactsToCollisions):
@@ -78,7 +78,7 @@ class DragonEntity(Entity, ReactsToCollisions):
         huge_dragon_sprite = pygame.transform.scale(assets.sprite("dragon.png"), (60, 43))
         self.__sprite = self.attach_component(make_sprite(huge_dragon_sprite, (x, y)))
         self.__collision = self.attach_component(
-            CollisionHitBox(offset=pygame.Rect(0, 0, 60, 43), follow_sprite_rect=True, draw_box=True))
+            CollisionHitBox(offset=pygame.Rect(0, 0, 60, 43), follow_sprite_rect=True, draw_box=False))
 
     def _tick(self):
         self.position.x -= 600 * game.delta_time
@@ -265,7 +265,7 @@ class EldenWizardEntity(Entity):
         self.wait_time = 0  # it's the timer for the placement of the crystal in the circle
         self.timer = self.shoot_cooldown
         self.phase = 1
-        self.pv = 10
+        self.pv = 4
         self.pv_max = self.pv
         self.position = Vector2(x, y)
         self.move_goal = self.position
@@ -276,7 +276,7 @@ class EldenWizardEntity(Entity):
         self.huge_coin_sprite = pygame.transform.scale(assets.sprite("elden_wizard.png"), (self.width, self.height))
         self.__sprite = self.attach_component(make_sprite(self.huge_coin_sprite, (self.position.x, self.position.y)))
         self.__collision = self.attach_component(
-            CollisionHitBox(offset=pygame.Rect(0, 0, self.width, self.height), follow_sprite_rect=True, draw_box=True))
+            CollisionHitBox(offset=pygame.Rect(0, 0, self.width, self.height), follow_sprite_rect=True, draw_box=False))
 
         # spawning health bar
         self.health_bar = EldenWizardHealthBar(self)
@@ -425,6 +425,7 @@ class EldenWizardEntity(Entity):
                     self.shield = EldenWizardShieldEntity(self.position.x, self.position.y, self)
                     game.world.spawn_entity(self.shield)
             elif not self.crystal_verification():
+                game.world.destroy_entity(self.shield)
                 self.shield_cooldown -= game.delta_time
 
     def set_cooldown(self, value):
@@ -505,7 +506,7 @@ class EldenWizardShieldEntity(Entity, ReactsToCollisions):
             KelvinSprite(self.huge_coin_sprite, (self.position.x, self.position.y), layer=150))
         self.__collision = self.attach_component(
             CollisionHitBox(offset=pygame.Rect(0, 0, self.width, self.height), type=2, radius=self.width / 2,
-                            follow_sprite_rect=True, draw_box=True))
+                            follow_sprite_rect=True, draw_box=False))
 
     def _tick(self):
         self.position.x = self.wizard.position.x + (33 - self.width / 2)
