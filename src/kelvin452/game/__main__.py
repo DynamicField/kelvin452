@@ -473,11 +473,12 @@ class EldenWizardCrystalShieldEntity(Entity):
         self.radiant = math.pi
         self.position = Vector2(x, y)
         # self.original_position = self.position
-        self.height = 30
-        self.width = 31.5
+        self.height = 40
+        self.width = 23 + 23/3
         self.huge_coin_sprite = pygame.transform.scale(assets.sprite("elden_wizard_crystal_shield.png"),
-                                                       (self.height, self.width))
-        self.__sprite = self.attach_component(make_sprite(self.huge_coin_sprite, (self.position.x, self.position.y)))
+                                                       (self.width, self.height))
+        self.__sprite = self.attach_component(
+            KelvinSprite(self.huge_coin_sprite, (self.position.x, self.position.y), layer=160))
         self.__collision = self.attach_component(
             CollisionHitBox(offset=pygame.Rect(0, 0, self.width, self.height), follow_sprite_rect=True, draw_box=False))
 
