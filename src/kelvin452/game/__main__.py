@@ -265,7 +265,7 @@ class EldenWizardEntity(Entity):
         self.wait_time = 0  # it's the timer for the placement of the crystal in the circle
         self.timer = self.shoot_cooldown
         self.phase = 1
-        self.pv = 4
+        self.pv = 2
         self.pv_max = self.pv
         self.position = Vector2(x, y)
         self.move_goal = self.position
@@ -277,6 +277,7 @@ class EldenWizardEntity(Entity):
         self.__sprite = self.attach_component(make_sprite(self.huge_coin_sprite, (self.position.x, self.position.y)))
         self.__collision = self.attach_component(
             CollisionHitBox(offset=pygame.Rect(0, 0, self.width, self.height), follow_sprite_rect=True, draw_box=False))
+        self.shield = None
 
         # spawning health bar
         self.health_bar = EldenWizardHealthBar(self)
@@ -313,6 +314,7 @@ class EldenWizardEntity(Entity):
         # start the phase two
         if self.phase != 2:
             self.phase = 2
+            self.moving_speed = 1
             self.crystal_number = 3
             self.crystal_counter = self.crystal_number
             self.set_cooldown(2)
@@ -322,6 +324,19 @@ class EldenWizardEntity(Entity):
 
     def phase_three(self):
         self.phase = 3
+        if self.shield is not None:
+            self.shield.destroy()
+        for i in game.world.get_entities(EldenWizardCrystalShieldEntity):
+            i.destroy()
+        self.moving_speed = 1
+        self.set_cooldown(2)
+        self.position = Vector2(100, 360 - self.height / 2)
+
+    def knight_wall_spawning(self):
+        ...
+
+    def coin_spawning(self, spawn_point):
+        ...
 
     def phase_four(self):
         self.phase = 4
@@ -427,6 +442,9 @@ class EldenWizardEntity(Entity):
             elif not self.crystal_verification():
                 game.world.destroy_entity(self.shield)
                 self.shield_cooldown -= game.delta_time
+
+        elif self.phase == 3:
+            ...
 
     def set_cooldown(self, value):
         self.shoot_cooldown = value
