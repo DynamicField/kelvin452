@@ -341,6 +341,40 @@ class EldenWizardEntity(Entity):
     def phase_four(self):
         self.phase = 4
 
+    def move(self):
+        if self.position == self.move_goal:
+            self.moving_goal()
+        elif self.moving_direction == 1 and self.move_goal[0] - 10 <= self.position.x <= self.move_goal[0] + 10:
+            self.position.x = self.move_goal[0]
+            self.moving_direction = 2
+        elif self.moving_direction == 2 and self.move_goal[1] - 10 <= self.position.y <= self.move_goal[1] + 10:
+            self.position.y = self.move_goal[1]
+            self.moving_direction = 1
+
+        elif self.moving_direction == 1:
+            if self.move_goal[0] - self.position.x < 0:
+                self.position.x -= 200 * game.delta_time * self.moving_speed
+            else:
+                self.position.x += 200 * game.delta_time * self.moving_speed
+
+        # don't leave the screen!
+        if self.position.x > 575:
+            self.position.x = 575
+        elif self.position.x < 0:
+            self.position.x = 0
+
+        elif self.moving_direction == 2:
+            if self.move_goal[1] - self.position.y < 0:
+                self.position.y -= 200 * game.delta_time * self.moving_speed
+            else:
+                self.position.y += 200 * game.delta_time * self.moving_speed
+            if self.position.y > 600:
+                self.position.x = 600
+            elif self.position.x < 100:
+                self.position.x = 100
+        self.moving_speed += self.moving_speed / 100 * game.delta_time
+        self.shoot_cooldown += self.shoot_cooldown / 100 * game.delta_time
+
     def _tick(self):
         if self.pv <= 0:
             add_score(100)
@@ -353,37 +387,7 @@ class EldenWizardEntity(Entity):
                                                                 self, (24, 60))
                 game.world.spawn_entity(projectile_entity)
                 self.timer = self.shoot_cooldown
-            if self.position == self.move_goal:
-                self.moving_goal()
-            elif self.moving_direction == 1 and self.move_goal[0] - 10 <= self.position.x <= self.move_goal[0] + 10:
-                self.position.x = self.move_goal[0]
-                self.moving_direction = 2
-            elif self.moving_direction == 2 and self.move_goal[1] - 10 <= self.position.y <= self.move_goal[1] + 10:
-                self.position.y = self.move_goal[1]
-                self.moving_direction = 1
-
-            elif self.moving_direction == 1:
-                if self.move_goal[0] - self.position.x < 0:
-                    self.position.x -= 200 * game.delta_time * self.moving_speed
-                else:
-                    self.position.x += 200 * game.delta_time * self.moving_speed
-                # don't leave the screen!
-                if self.position.x > 575:
-                    self.position.x = 575
-                elif self.position.x < 0:
-                    self.position.x = 0
-
-            elif self.moving_direction == 2:
-                if self.move_goal[1] - self.position.y < 0:
-                    self.position.y -= 200 * game.delta_time * self.moving_speed
-                else:
-                    self.position.y += 200 * game.delta_time * self.moving_speed
-                if self.position.y > 600:
-                    self.position.x = 600
-                elif self.position.x < 100:
-                    self.position.x = 100
-            self.moving_speed += self.moving_speed / 100 * game.delta_time
-            self.shoot_cooldown += self.shoot_cooldown / 100 * game.delta_time
+            self.move()
 
         elif self.phase == 2:
             self.timer -= game.delta_time
