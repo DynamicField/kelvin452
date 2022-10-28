@@ -332,12 +332,6 @@ class EldenWizardEntity(Entity):
         self.set_cooldown(2)
         self.position = Vector2(100, 360 - self.height / 2)
 
-    def knight_wall_spawning(self):
-        ...
-
-    def coin_spawning(self, spawn_point):
-        ...
-
     def phase_four(self):
         self.phase = 4
 
@@ -357,12 +351,6 @@ class EldenWizardEntity(Entity):
             else:
                 self.position.x += 200 * game.delta_time * self.moving_speed
 
-        # don't leave the screen!
-        if self.position.x > 575:
-            self.position.x = 575
-        elif self.position.x < 0:
-            self.position.x = 0
-
         elif self.moving_direction == 2:
             if self.move_goal[1] - self.position.y < 0:
                 self.position.y -= 200 * game.delta_time * self.moving_speed
@@ -372,8 +360,12 @@ class EldenWizardEntity(Entity):
                 self.position.x = 600
             elif self.position.x < 100:
                 self.position.x = 100
-        self.moving_speed += self.moving_speed / 100 * game.delta_time
-        self.shoot_cooldown += self.shoot_cooldown / 100 * game.delta_time
+
+        # don't leave the screen!
+        if self.position.x > 575:
+            self.position.x = 575
+        elif self.position.x < 0:
+            self.position.x = 0
 
     def _tick(self):
         if self.pv <= 0:
@@ -388,6 +380,8 @@ class EldenWizardEntity(Entity):
                 game.world.spawn_entity(projectile_entity)
                 self.timer = self.shoot_cooldown
             self.move()
+            self.moving_speed += self.moving_speed / 100 * game.delta_time
+            self.shoot_cooldown += self.shoot_cooldown / 100 * game.delta_time
 
         elif self.phase == 2:
             self.timer -= game.delta_time
@@ -396,42 +390,13 @@ class EldenWizardEntity(Entity):
                                                                 self, (24, 60))
                 game.world.spawn_entity(projectile_entity)
                 self.timer = self.shoot_cooldown
-            if self.position == self.move_goal:
-                self.moving_goal()
-            elif self.moving_direction == 1 and self.move_goal[0] - 10 <= self.position.x <= self.move_goal[0] + 10:
-                self.position.x = self.move_goal[0]
-                self.moving_direction = 2
-            elif self.moving_direction == 2 and self.move_goal[1] - 10 <= self.position.y <= self.move_goal[1] + 10:
-                self.position.y = self.move_goal[1]
-                self.moving_direction = 1
-
-            elif self.moving_direction == 1:
-                if self.move_goal[0] - self.position.x < 0:
-                    self.position.x -= 200 * game.delta_time * self.moving_speed
-                else:
-                    self.position.x += 200 * game.delta_time * self.moving_speed
-                # don't leave the screen!
-                if self.position.x > 575:
-                    self.position.x = 575
-                elif self.position.x < 0:
-                    self.position.x = 0
-
-            elif self.moving_direction == 2:
-                if self.move_goal[1] - self.position.y < 0:
-                    self.position.y -= 200 * game.delta_time * self.moving_speed
-                else:
-                    self.position.y += 200 * game.delta_time * self.moving_speed
-                if self.position.y > 600:
-                    self.position.x = 600
-                elif self.position.x < 100:
-                    self.position.x = 100
+            self.move()
             self.moving_speed += self.moving_speed / 2 / 100 * game.delta_time
 
             if self.shield_cooldown <= 0:
-                if self.wait_time <= 0 and self.crystal_counter > 0:
+                if (self.wait_time <= 0) and (self.crystal_counter > 0):
                     game.world.spawn_entity(EldenWizardCrystalShieldEntity(self.position.x, self.position.y, self))
                     self.crystal_counter -= 1
-                    print(self.crystal_counter)
                     self.wait_time = (2 * math.pi / self.crystal_speed) / self.crystal_number
                 else:
                     self.wait_time -= game.delta_time
@@ -496,7 +461,7 @@ class EldenWizardCrystalShieldEntity(Entity):
         self.position = Vector2(x, y)
         # self.original_position = self.position
         self.height = 40
-        self.width = 23 + 23/3
+        self.width = 23 + 23 / 3
         self.huge_coin_sprite = pygame.transform.scale(assets.sprite("elden_wizard_crystal_shield.png"),
                                                        (self.width, self.height))
         self.__sprite = self.attach_component(
@@ -539,6 +504,47 @@ class EldenWizardShieldEntity(Entity, ReactsToCollisions):
     def _on_collide(self, other: Entity):
         if isinstance(other, DragonEntity):
             game.world.destroy_entity(other)
+
+
+class EldenWizardSpawnCoinEntity(Entity):
+    # [(name, cost, probability / 100), pv]
+    coins_list_setup = [(ClassicCoinEntity, 1, 100 / 100, 1), (WizardCoinEntity, 2, 80 / 100, 1),
+                        (KnightCoinEntity, 5, 75 / 100, 2)]
+    def __init__(self):
+        super().__init__()
+        self.spawn_points = random.randint(7, 11)
+        self.spawn_cooldown = 0.3
+        self.spawn_timer = self.spawn_cooldown
+        self.spawn_list = []
+
+        self.paused = False
+
+    def spawn_listing(self):
+        self.spawn_list = []
+
+        for i in range(-1, - 1 - len(self.coins_list_setup), -1):
+            print(f"i : {i}")
+            probability = self.coins_list_setup[i][2]
+            cost = self.coins_list_setup[i][1]
+            print(f"cost : {cost}")
+            while (self.spawn_points >= cost) and (random.randint(1, 100) / 100 >= 1 - probability):
+                self.spawn_points -= cost
+                print(f"spawnpoint : {self.spawn_points}")
+                self.spawn_list.append(self.coins_list_setup[i][0])
+
+        random.shuffle(self.spawn_list)
+
+    def the_random(self):
+        ...
+    def spawn_knight_wall(self):
+        ...
+
+    def _tick(self):
+        if not self.paused:
+            if self.spawn_timer <= 0:
+                entity = self.spawn_list.pop()
+                game.world.spawn_entity(entity[0], )
+                self.spawn_timer = self.spawn_cooldown
 
 
 class EldenWizardHealthBar(Entity):
