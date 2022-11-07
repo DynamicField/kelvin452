@@ -82,15 +82,13 @@ class DragonEntity(Entity, ReactsToCollisions):
             game.world.destroy_entity(self)
 
     def _on_collide(self, other: Entity):
-        if type(other) not in (FireEntity, DragonEntity):
-            if type(other) in other.coin_spawner.get_coin_list():
-                if hasattr(other, 'reward'):
-                    other.dragon_touch(self.damage)
-                    if self.durability == 1:
-                        game.world.destroy_entity(self)
-                    else:
-                        self.durability -= 1
-        elif type(other) in (EldenWizardEntity, EldenWizardCrystalShieldEntity):
+        if type(other) in (EldenWizardEntity, EldenWizardCrystalShieldEntity):
+            other.dragon_touch(self.damage)
+            if self.durability == 1:
+                game.world.destroy_entity(self)
+            else:
+                self.durability -= 1
+        elif type(other) in CoinSpawner.get_coin_list() or type(other) in EldenWizardSpawnCoinEntity.get_coin_list():
             other.dragon_touch(self.damage)
             if self.durability == 1:
                 game.world.destroy_entity(self)
@@ -152,12 +150,12 @@ class WizardCoinEntity(Entity):
         self.coin_spawner = spawner
         self.pv = self.coin_spawner.get_coin_pv(WizardCoinEntity)
         self.reward = 2
-        self.position = Vector2(x, y)
         self.position_backup = self.position
         self.shoot_cooldown = random.randint(1, 2)
         self.timer = self.shoot_cooldown
         self.height = random.randint(32, 64)
         self.width = (29 * self.height) // 30
+        self.position = Vector2(x - self.width // 2, y - self.height // 2)
         self.huge_coin_sprite = pygame.transform.scale(assets.sprite("wizard_coin.png"), (self.width, self.height))
         self.__sprite = self.attach_component(make_sprite(self.huge_coin_sprite, (self.position.x, self.position.y)))
         self.__collision = self.attach_component((CollisionHitBox(offset=pygame.Rect(0, 0, self.width, self.height),
@@ -227,8 +225,8 @@ class KnightCoinEntity(Entity):
         self.pv = self.coin_spawner.get_coin_pv(KnightCoinEntity)
         self.armored = True
         self.reward = 3
-        self.position = Vector2(x, y)
         self.size = random.randint(32, 64)
+        self.position = Vector2(x - self.size // 2, y - self.size // 2)
         self.huge_coin_sprite = pygame.transform.scale(assets.sprite("armored_knight_coin.png"), (self.size, self.size))
         self.__sprite = self.attach_component(make_sprite(self.huge_coin_sprite, (self.position.x, self.position.y)))
         self.__collision = self.attach_component(
@@ -259,7 +257,7 @@ class KnightCoinEntity(Entity):
 class EldenWizardEntity(Entity):
     def __init__(self, x, y):
         super().__init__()
-        self.coin_spawner = EldenWizardSpawnCoinEntity
+        self.coin_spawner = EldenWizardSpawnCoinEntity()
         self.shoot_cooldown = 2
         self.shield_cooldown = 0
         self.crystal_speed = 2
@@ -514,12 +512,26 @@ class EldenWizardSpawnCoinEntity(Entity):
     coins_list_setup = [(ClassicCoinEntity, 1, 100 / 100, 1), (WizardCoinEntity, 2, 80 / 100, 1),
                         (KnightCoinEntity, 5, 75 / 100, 2)]
 
+    @staticmethod
+    def get_coin_list():
+        coin_list = []
+        for i in range(len(EldenWizardSpawnCoinEntity.coins_list_setup)):
+            coin_list.append(EldenWizardSpawnCoinEntity.coins_list_setup[i][0])
+        return coin_list
+
+    @staticmethod
+    def get_coin_pv(name):
+        for i in range(len(CoinSpawner.coins_list_setup)):
+            if CoinSpawner.coins_list_setup[i][0] == name:
+                return CoinSpawner.coins_list_setup[i][3]
+
     def __init__(self):
         super().__init__()
         self.spawn_points = random.randint(7, 11)
         self.spawn_cooldown = 0.3
         self.spawn_timer = self.spawn_cooldown
         self.wave_cooldown = 2
+        self.wave_timer = self.wave_cooldown
         self.knight_wall = True
 
         self.spawn_list = []
@@ -545,8 +557,10 @@ class EldenWizardSpawnCoinEntity(Entity):
 
     def spawn_knight_wall(self):
         knight_number = random.randint(3, 5)
+        y_interval = (200, 600)
         for i in range(knight_number):
-            game.world.spawn_entity(KnightCoinEntity(200, (100 + (i / knight_number) * 500), self))
+            game.world.spawn_entity(
+                KnightCoinEntity(200, (y_interval[0] + ((y_interval[1] - y_interval[0]) / knight_number) * i), self))
 
     def no_coins(self):  # it will look if all coins are dead
         for i in self.get_coin_list():
@@ -557,7 +571,7 @@ class EldenWizardSpawnCoinEntity(Entity):
     def _tick(self):
         if not self.paused:
             # spawning part
-            if self.wave_cooldown <= 0:
+            if self.wave_timer <= 0:
                 if self.knight_wall:
                     self.spawn_knight_wall()
 
@@ -573,6 +587,8 @@ class EldenWizardSpawnCoinEntity(Entity):
 
                             self.spawn_timer = self.spawn_cooldown
                     self.spawn_timer -= game.delta_time
+                self.wave_timer = self.wave_cooldown
+            self.wave_timer -= game.delta_time
 
 
 class EldenWizardHealthBar(Entity):
