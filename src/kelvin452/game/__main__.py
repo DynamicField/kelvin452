@@ -529,10 +529,11 @@ class EldenWizardSpawnCoinEntity(Entity):
         super().__init__()
         self.spawn_points = random.randint(7, 11)
         self.spawn_cooldown = 0.3
-        self.spawn_timer = self.spawn_cooldown
+        self.spawn_timer = 0
         self.wave_cooldown = 2
         self.wave_timer = self.wave_cooldown
         self.knight_wall = True
+        self.spawn = True
 
         self.spawn_list = []
         self.random_y = 300
@@ -554,6 +555,7 @@ class EldenWizardSpawnCoinEntity(Entity):
                 self.spawn_list.append(self.coins_list_setup[i][0])
 
         random.shuffle(self.spawn_list)
+        self.spawn = False
 
     def spawn_knight_wall(self):
         knight_number = random.randint(3, 5)
@@ -561,7 +563,7 @@ class EldenWizardSpawnCoinEntity(Entity):
         for i in range(knight_number):
             game.world.spawn_entity(
                 KnightCoinEntity(200, (y_interval[0] + ((y_interval[1] - y_interval[0]) / knight_number) * i), self))
-        self.knight_wall = False
+        self.spawn = False
 
     def no_coins(self):  # it will look if all coins are dead
         for i in self.get_coin_list():
@@ -573,14 +575,16 @@ class EldenWizardSpawnCoinEntity(Entity):
         if not self.paused:
             # spawning part
             if self.wave_timer <= 0:
-                if self.knight_wall:
+                if self.knight_wall and self.spawn:
                     self.spawn_knight_wall()
-
-                elif len(game.world.get_entities(KnightCoinEntity)) == 0:
-                    print(print(game.delta_time))
+                else:
+                    if self.spawn:
+                        self.spawn_listing()
+                    print(self.wave_timer)
                     if self.spawn_timer <= 0:
-                        print(self.spawn_timer, self.spawn_list)
+                        print(self.spawn_list)
                         if self.spawn_list != []:
+                            print("issou")
                             # to make a real random spawn for y
                             self.random_y = random.randint(200, 515)
                             while self.previous_y - 50 <= self.random_y <= self.previous_y + 50:
@@ -589,10 +593,11 @@ class EldenWizardSpawnCoinEntity(Entity):
                             self.previous_y = self.random_y
 
                             self.spawn_timer = self.spawn_cooldown
-                        else:
-                            self.knight_wall = True
                     self.spawn_timer -= game.delta_time
                 self.wave_timer = self.wave_cooldown
+                if self.no_coins() and self.spawn_list == []:
+                    self.knight_wall = not self.knight_wall
+                    self.spawn = True
             self.wave_timer -= game.delta_time
 
 
