@@ -197,8 +197,8 @@ class WizardCoinEntity(Entity):
 class WizardProjectileEntity(Entity, ReactsToCollisions):
     def __init__(self, x, y, wizard):
         super().__init__()
-        self.height = wizard.height / 2
-        self.width = (13 * self.height) / 10
+        self.width = wizard.width / 2
+        self.height = (12 * self.width) / 30
         self.position = Vector2(x + (26 * wizard.width) / 29, y + (12.5 * wizard.height) / 30 - self.height / 2)
         huge_projectile_sprite = pygame.transform.scale(assets.sprite("wizard_projectile.png"),
                                                         (self.width, self.height))
@@ -549,9 +549,9 @@ class EldenWizardSpawnCoinEntity(Entity):
             probability = self.coins_list_setup[i][2]
             cost = self.coins_list_setup[i][1]
             print(f"cost : {cost}")
+            print(f"spawnpoint : {self.spawn_points}")
             while (self.spawn_points >= cost) and (random.randint(1, 100) / 100 >= 1 - probability):
                 self.spawn_points -= cost
-                print(f"spawnpoint : {self.spawn_points}")
                 self.spawn_list.append(self.coins_list_setup[i][0])
 
         random.shuffle(self.spawn_list)
