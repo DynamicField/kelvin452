@@ -52,6 +52,11 @@ class WorldSystem(System):
         else:
             return None
 
+    def get_only_entity(self, entity_list, type_filter: Type[T] = None):
+        for i in entity_list:
+            if i != type_filter and len(self.get_entities(i)) > 0:
+                return False
+        return True
 
 class Entity(HasLifetime):
     """
