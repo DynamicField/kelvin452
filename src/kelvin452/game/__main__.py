@@ -266,6 +266,8 @@ class EldenWizardEntity(Entity):
         self.phase = 1
         self.pv_max = 100
         self.pv = 50  # pv_max
+        self.healing_cooldown = 1
+        self.heal_timer = self.healing_cooldown
         self.position = Vector2(x, y)
         self.move_goal = self.position
         self.moving_direction = None  # if the Coin move in the x or y axe
@@ -289,7 +291,11 @@ class EldenWizardEntity(Entity):
             self.phase_one()
 
         elif 0.5 < self.pv / self.pv_max <= 0.75 and self.phase != 2:
-            self.phase_two()
+            if self.phase == 3:
+                if self.pv / self.pv_max >= 0.75:
+                    self.phase_two()
+            else:
+                self.phase_two()
 
         elif 0.25 < self.pv / self.pv_max <= 0.5 and self.phase != 3:
             self.phase_three()
@@ -331,6 +337,9 @@ class EldenWizardEntity(Entity):
         self.set_cooldown(2)
         self.position = Vector2(100, 360 - self.height / 2)
         game.world.spawn_entity(self.coin_spawner)
+
+    def healing(self):
+        self.pv += self.pv_max / 100
 
     def phase_four(self):
         self.phase = 4
@@ -414,7 +423,11 @@ class EldenWizardEntity(Entity):
                 self.shield_cooldown -= game.delta_time
 
         elif self.phase == 3:
-            ...
+            if self.coin_spawner.knight_wall and game.world.get_entities(KnightCoinEntity):
+                if self.heal_timer <= 0:
+                    self.healing()
+                    self.heal_timer = self.healing_cooldown
+                self.heal_timer -= game.delta_time
 
     def set_cooldown(self, value):
         self.shoot_cooldown = value
@@ -531,7 +544,7 @@ class EldenWizardSpawnCoinEntity(Entity):
 
     def __init__(self):
         super().__init__()
-        self.spawn_points = random.randint(7, 11)
+        self.spawn_points = random.randint(7, 15)
         self.spawn_cooldown = 0.3
         self.spawn_timer = 0
         self.wave_cooldown = 4
