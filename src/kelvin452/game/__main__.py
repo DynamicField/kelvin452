@@ -265,7 +265,7 @@ class EldenWizardEntity(Entity):
         self.timer = self.shoot_cooldown
         self.phase = 1
         self.pv_max = 100
-        self.pv = 50  # pv_max
+        self.pv = 25  # pv_max
         self.healing_cooldown = 1
         self.heal_timer = self.healing_cooldown
         self.position = Vector2(x, y)
@@ -344,6 +344,8 @@ class EldenWizardEntity(Entity):
     def phase_four(self):
         self.phase = 4
         game.world.destroy_entity(self.coin_spawner)
+        self.moving_speed = 2
+        self.set_cooldown(1)
 
     def move(self):
         if self.position == self.move_goal:
@@ -377,6 +379,12 @@ class EldenWizardEntity(Entity):
         elif self.position.x < 0:
             self.position.x = 0
 
+    def shoot(self, lethal=False):
+        projectile_entity = EldenWizardProjectileEntity(self.position.x + 49, self.position.y + 39,
+                                                        self, (24, 60), lethal)
+        game.world.spawn_entity(projectile_entity)
+        self.timer = self.shoot_cooldown
+
     def _tick(self):
         if self.pv <= 0:
             add_score(100)
@@ -385,21 +393,13 @@ class EldenWizardEntity(Entity):
         if self.phase == 1:
             self.timer -= game.delta_time
             if self.timer <= 0:
-                projectile_entity = EldenWizardProjectileEntity(self.position.x + 49, self.position.y + 39,
-                                                                self, (24, 60))
-                game.world.spawn_entity(projectile_entity)
-                self.timer = self.shoot_cooldown
+                self.shoot()
             self.move()
-            self.moving_speed += self.moving_speed / 100 * game.delta_time
-            self.shoot_cooldown += self.shoot_cooldown / 100 * game.delta_time
 
         elif self.phase == 2:
             self.timer -= game.delta_time
             if self.timer <= 0:
-                projectile_entity = EldenWizardProjectileEntity(self.position.x + 49, self.position.y + 39,
-                                                                self, (24, 60))
-                game.world.spawn_entity(projectile_entity)
-                self.timer = self.shoot_cooldown
+                self.shoot()
             self.move()
             self.moving_speed += self.moving_speed / 2 / 100 * game.delta_time
 
@@ -429,22 +429,30 @@ class EldenWizardEntity(Entity):
                     self.heal_timer = self.healing_cooldown
                 self.heal_timer -= game.delta_time
 
+        elif self.phase == 4:
+            self.timer -= game.delta_time
+            if self.timer <= 0:
+                self.shoot(random.randint(0, 1))
+            self.move()
+            self.moving_speed += self.moving_speed / 100 * game.delta_time
+            self.shoot_cooldown -= self.shoot_cooldown / 100 * game.delta_time
+
     def set_cooldown(self, value):
         self.shoot_cooldown = value
 
 
 class EldenWizardProjectileEntity(Entity, ReactsToCollisions):
-    def __init__(self, x, y, wizard, size: tuple = (12, 30), mode=1):
+    def __init__(self, x, y, wizard, size: tuple = (12, 30), mode=0):
         super().__init__()
         self.type = mode
         self.height, self.width = size
         self.position = Vector2(x, y)
 
         huge_projectile_sprite = None
-        if self.type == 1:
+        if self.type == 0:  # not lethal
             huge_projectile_sprite = pygame.transform.scale(assets.sprite("elden_wizard_safe_projectile.png"),
                                                             (self.width, self.height))
-        elif self.type == 2:
+        elif self.type == 1:  # lethal
             huge_projectile_sprite = pygame.transform.scale(assets.sprite("elden_wizard_lethal_projectile.png"),
                                                             (self.width, self.height))
         self.__sprite = self.attach_component(make_sprite(huge_projectile_sprite, (self.position.x, self.position.y)))
@@ -455,13 +463,13 @@ class EldenWizardProjectileEntity(Entity, ReactsToCollisions):
     def _tick(self):
         self.position.x += 600 * game.delta_time
         if self.position.x > 1200:
-            if self.type == 1:
+            if self.type == 0:
                 life.modify_life(-1)
             game.world.destroy_entity(self)
 
     def _on_collide(self, other: Entity):
         if isinstance(other, FireEntity):
-            if self.type == 2:
+            if self.type == 1:
                 life.modify_life(-1)
             game.world.destroy_entity(self)
 
