@@ -2,7 +2,7 @@ import pygame
 from kelvin452.engine.fonts import default_font
 from kelvin452.engine import *
 
-enemy = 0
+enemy = 100000000000
 max_enemies_on_screen = 100
 
 
@@ -41,7 +41,7 @@ def modify_enemy(amount):
 class EnemyText(Entity):
     def __init__(self, x=1161, y=612):
         super().__init__()
-        basic_enemy(0)
+        basic_enemy(enemy)
         self.position = Vector2(x, y)
         self.previous_enemy = -1
         self.survive_game_over = False

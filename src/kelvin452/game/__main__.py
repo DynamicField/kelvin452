@@ -255,17 +255,18 @@ class KnightCoinEntity(Entity):
 
 
 class EldenWizardEntity(Entity):
-    def __init__(self, x, y):
+    def __init__(self, x, y, lvl=1.0):
         super().__init__()
         self.coin_spawner = EldenWizardSpawnCoinEntity()
+        self.lvl = lvl  # the level of the Elden Wizard
         self.shoot_cooldown = 2
         self.shield_cooldown = 0
         self.crystal_speed = 2
         self.wait_time = 0  # it's the timer for the placement of the crystal in the circle
         self.timer = self.shoot_cooldown
         self.phase = 1
-        self.pv_max = 100
-        self.pv = 25  # pv_max
+        self.pv_max = 100 * self.lvl
+        self.pv = self.pv_max
         self.healing_cooldown = 1
         self.heal_timer = self.healing_cooldown
         self.position = Vector2(x, y)
@@ -413,7 +414,7 @@ class EldenWizardEntity(Entity):
 
                 if self.crystal_counter == 0:
                     self.shield_cooldown = 5
-                    if self.crystal_number < 5:
+                    if self.crystal_number < 3 + 2 * self.lvl:
                         self.crystal_number += 1
                     self.crystal_counter = self.crystal_number
                     self.shield = EldenWizardShieldEntity(self.position.x, self.position.y, self)
@@ -648,9 +649,11 @@ class EldenWizardHealthBar(Entity):
             self.width = (self.elden_wizard.pv * self.width_max) / self.elden_wizard.pv_max
 
             # reload the sprite
-            self.__sprite.image = pygame.transform.scale(assets.sprite("barre_pv_boss(temporaire).png"), (self.width,
-                                                                                                          self.height))
-            self.__sprite.dirty = 1
+            if self.elden_wizard.pv >= 0:
+                self.__sprite.image = pygame.transform.scale(assets.sprite("barre_pv_boss(temporaire).png"),
+                                                             (self.width,
+                                                              self.height))
+                self.__sprite.dirty = 1
 
 
 class CoinSpawner(Entity):
@@ -744,48 +747,55 @@ class CoinSpawner(Entity):
             self.wave = False
 
         if not self.paused:
-            # spawning part
-            if self.spawn_timer <= 0 and self.spawn_list != []:
-                # to make a real random spawn for y
-                self.random_y = random.randint(200, 515)
-                while self.previous_y - 50 <= self.random_y <= self.previous_y + 50:
-                    self.random_y = random.randint(258, 503)
-                game.world.spawn_entity(
-                    (self.spawn_list.pop())(0, self.random_y, self))
-                self.previous_y = self.random_y
+            if level.level % 10 == 0 and level.level > 0:
+                print(level.level)
+                self.paused = True
+                elden_wizard = EldenWizardEntity(600, 315, level.level / 10)
+                game.world.spawn_entity(elden_wizard)
+            else:
+                # spawning part
+                if self.spawn_timer <= 0 and self.spawn_list != []:
+                    # to make a real random spawn for y
+                    self.random_y = random.randint(200, 515)
+                    while self.previous_y - 50 <= self.random_y <= self.previous_y + 50:
+                        self.random_y = random.randint(258, 503)
+                    game.world.spawn_entity(
+                        (self.spawn_list.pop())(0, self.random_y, self))
+                    self.previous_y = self.random_y
 
-                self.spawn_timer = self.spawn_cooldown
-                self.pre_wave_timer = 4
-                self.pre_wave_counter = False
+                    self.spawn_timer = self.spawn_cooldown
+                    self.pre_wave_timer = 4
+                    self.pre_wave_counter = False
 
-            self.spawn_timer -= game.delta_time
+                self.spawn_timer -= game.delta_time
 
-            # wave ending
-            if CoinSpawner.no_coins(self) and not self.pre_wave_counter:
-                if level.level % 3 == 0:
-                    self.powerup_time = True
+                # wave ending
+                if CoinSpawner.no_coins(self) and not self.pre_wave_counter:
+                    if level.level % 3 == 0:
+                        self.powerup_time = True
 
-                print(f"level = {level.level}")
+                    print(f"level = {level.level}")
 
-                # time to write all in the log file
-                with open('log_coin_spawner.csv', 'a', newline='') as file:
-                    writer = csv.writer(file)
-                    writer.writerow(
-                        [self.csv_equation, level.level, self.csv_spawnpoint, self.csv_nbr_coin, self.csv_nbr_wizard,
-                         self.csv_nbr_knight])
-                    self.csv_nbr_coin, self.csv_nbr_wizard, self.csv_nbr_knight = 0, 0, 0
+                    # time to write all in the log file
+                    with open('log_coin_spawner.csv', 'a', newline='') as file:
+                        writer = csv.writer(file)
+                        writer.writerow(
+                            [self.csv_equation, level.level, self.csv_spawnpoint, self.csv_nbr_coin,
+                             self.csv_nbr_wizard,
+                             self.csv_nbr_knight])
+                        self.csv_nbr_coin, self.csv_nbr_wizard, self.csv_nbr_knight = 0, 0, 0
 
-                self.pre_wave_counter = True
+                    self.pre_wave_counter = True
 
-            if self.pre_wave_counter:
-                if self.powerup_time and self.pre_wave_timer < 3:
-                    self.show_powerup_menu()
-                elif self.pre_wave_timer > 0:
-                    self.pre_wave_timer -= game.delta_time
-                else:
-                    level.add_level()
-                    self.spawn_list = []
-                    self.wave = True
+                if self.pre_wave_counter:
+                    if self.powerup_time and self.pre_wave_timer < 3:
+                        self.show_powerup_menu()
+                    elif self.pre_wave_timer > 0:
+                        self.pre_wave_timer -= game.delta_time
+                    else:
+                        level.add_level()
+                        self.spawn_list = []
+                        self.wave = True
 
     def show_powerup_menu(self):
         def unpause():
@@ -956,16 +966,15 @@ def game_start():
     game.world.spawn_entity(level.LevelText())
     game.world.spawn_entity(enemy_module.EnemyText())
     game.world.spawn_entity(life.LifeText())
-    elden_wizard = EldenWizardEntity(600, 315)
-    game.world.spawn_entity(elden_wizard)
     fire_entity = FireEntity(1024, 315)
     game.world.spawn_entity(fire_entity)
+    game.world.spawn_entity(CoinSpawner())
 
 
 def launch_game():
     game.initialize_game()
     game.on_start(start_menu)
-    game.log_fps = True
+    game.log_fps = False
     game.start()
 
 

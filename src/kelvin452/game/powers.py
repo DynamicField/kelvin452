@@ -80,14 +80,14 @@ class PowerupMenu(Entity, EventConsumer):
         self.place_element_centered(self.shop_text, 30)
 
         # Mis à jour plus tard
-        self.coins_pierced_upgrade_text = self.background.govern(TextBlock())
+        """self.coins_pierced_upgrade_text = self.background.govern(TextBlock())
         self.coins_pierced_upgrade_buy_button: Button[TextBlock] = self.background.govern(
             Button(PowerupMenu.BUY_BUTTON_SIZE,
                    PowerupMenu.GREEN_BUTTON_SURFACE,
                    TextBlock()))
         self.coins_pierced_upgrade_buy_button.on_click = self.upgrade_callback(Powers.upgrade_coins_pierced)
         self.place_element_centered(self.coins_pierced_upgrade_buy_button, 120)
-
+"""
         self.fire_rate_upgrade_text = self.background.govern(TextBlock())
         self.fire_rate_upgrade_buy_button: Button[TextBlock] = self.background.govern(
             Button(PowerupMenu.BUY_BUTTON_SIZE,
@@ -116,14 +116,14 @@ class PowerupMenu(Entity, EventConsumer):
         self.update_upgrade_state()
 
     def update_upgrade_state(self):
-        coins_pierced_old, coins_pierced_new, coins_pierced_cost = self.powers.next_coins_pierced_upgrade()
+        """coins_pierced_old, coins_pierced_new, coins_pierced_cost = self.powers.next_coins_pierced_upgrade()
         self.coins_pierced_upgrade_text.text \
             = f"PIÈCES PÉNÉTRÉES PAR DRAGON : {coins_pierced_old} -> {coins_pierced_new} | " \
               f"COÛTE {coins_pierced_cost} ennemis"
         self.coins_pierced_upgrade_text.force_update()
         self.place_element_centered(self.coins_pierced_upgrade_text, 80)
         self.update_upgrade_button(self.coins_pierced_upgrade_buy_button, coins_pierced_cost)
-
+"""
         fire_rate_old, fire_rate_new, fire_rate_cost = self.powers.next_fire_rate_upgrade()
         self.fire_rate_upgrade_text.text \
             = f"CADENCE DE TIR : {fire_rate_old:.2f}/sec -> {fire_rate_new:.2f}/sec | COÛTE {fire_rate_cost} ennemis"
