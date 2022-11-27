@@ -53,9 +53,10 @@ class RenderingSystem(System):
         # Faire le rendu de l'écran entier en cas d'actions exceptionnelles
         # parce que le groupe principal doit être rerendu en entier s'il y a des
         # sprites retirés de l'interface.
-        if len(self.queued_rendering_actions) > 0 or self.repaint_next_frames > 0 or \
-                len(self._ui_sprites.lostsprites) > 0:
-            self._sprites.set_clip()
+
+
+        #if len(self.queued_rendering_actions) > 0 or self.repaint_next_frames > 0 or len(self._ui_sprites.lostsprites) > 0:
+        self._sprites.set_clip()
 
         # Mettre à jour les FPS
         self._fps_sprite.update()

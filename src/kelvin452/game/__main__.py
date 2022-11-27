@@ -1,6 +1,7 @@
 import pygame.cursors
 import pygame.transform
 
+import kelvin452.game.inventory
 from kelvin452.engine import *
 import random
 import math
@@ -969,12 +970,14 @@ def game_start():
     fire_entity = FireEntity(1024, 315)
     game.world.spawn_entity(fire_entity)
     game.world.spawn_entity(CoinSpawner())
+    inventory = kelvin452.game.inventory.Inventory()
+    game.world.spawn_entity(inventory)
 
 
 def launch_game():
     game.initialize_game()
     game.on_start(start_menu)
-    game.log_fps = False
+    game.log_fps = True
     game.start()
 
 

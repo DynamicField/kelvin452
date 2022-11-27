@@ -16,7 +16,7 @@ class LevelText(Entity):
     def __init__(self, x=60, y=28):
         super().__init__()
         global level
-        level = 10
+        level = 3
         self.position = Vector2(x, y)
         self.previous_level = 0
         self.survive_game_over = False
