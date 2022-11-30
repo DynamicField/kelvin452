@@ -13,6 +13,7 @@ import kelvin452.game.level as level
 import kelvin452.game.enemy as enemy_module
 import kelvin452.game.powers as powers
 import kelvin452.game.life as life
+import kelvin452.game.inventory as inventory
 from collections import namedtuple
 
 
@@ -267,7 +268,7 @@ class EldenWizardEntity(Entity):
         self.timer = self.shoot_cooldown
         self.phase = 1
         self.pv_max = 100 * self.lvl
-        self.pv = self.pv_max
+        self.pv = 1  # self.pv_max
         self.healing_cooldown = 1
         self.heal_timer = self.healing_cooldown
         self.position = Vector2(x, y)
@@ -389,7 +390,14 @@ class EldenWizardEntity(Entity):
 
     def _tick(self):
         if self.pv <= 0:
-            add_score(100)
+            add_score(500)
+
+            if not inventory.game.world.get_single_entity(inventory.Inventory).is_in_inventory(
+                    inventory.PiercingCrystalEntity):
+                inventory.game.world.get_single_entity(inventory.Inventory).add_inventory(
+                    inventory.PiercingCrystalEntity)
+            level.add_level()
+            game.world.get_single_entity(CoinSpawner).paused = False
             self.destroy()
 
         if self.phase == 1:
@@ -701,7 +709,7 @@ class CoinSpawner(Entity):
         self.previous_y = 300
 
         # for the csv file
-        self.csv_equation = "(1 / math.sqrt(5)) * ((phi ** x) - (-1 / phi) ** x)"
+        self.csv_equation = "((x * abs(sin(x*1+1))+x)/0.3)*-2x+ (2/3)*x"
         self.csv_spawnpoint = 0
         self.csv_nbr_coin = 0
         self.csv_nbr_wizard = 0
@@ -711,8 +719,7 @@ class CoinSpawner(Entity):
         print(f"the fucking level is {level.level}")
         x = level.level
         # it calculates the numbers of points who will use by wave to spawn coins
-        phi = (1 + math.sqrt(5)) / 2
-        equation = (1 / math.sqrt(5)) * ((phi ** x) - (-1 / phi) ** x)
+        equation = ((x * abs(math.sin(math.radians(x * 1 + 1))) + x) / 0.3) - 2 * x + (2 / 3) * x
         return equation
 
     def spawn_listing(self):
@@ -970,8 +977,7 @@ def game_start():
     fire_entity = FireEntity(1024, 315)
     game.world.spawn_entity(fire_entity)
     game.world.spawn_entity(CoinSpawner())
-    inventory = kelvin452.game.inventory.Inventory()
-    game.world.spawn_entity(inventory)
+    game.world.spawn_entity(inventory.Inventory())
 
 
 def launch_game():

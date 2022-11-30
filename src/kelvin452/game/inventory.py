@@ -19,8 +19,9 @@ class Inventory(Entity, EventConsumer):
     def consume_event(self, new_event: pygame.event.Event) -> bool:
         if new_event.type == pygame.MOUSEBUTTONDOWN \
                 and self.__sprite.rect.collidepoint(game.input.get_mouse_position()):
-            self.open_menu()
-            return True
+            if len(game.world.get_entities(InventoryMenu)) <= 0:
+                self.open_menu()
+                return True
         return False
 
     def open_menu(self):
@@ -119,4 +120,4 @@ class PiercingCrystalEntity(Entity):
         self.size = (size * 31) / 31
         self.huge_piercingcrystal_sprite = pygame.transform.scale(assets.sprite("piercing_crystal.png"), (size, size))
         self.__sprite = self.attach_component(
-            KelvinSprite(self.huge_piercingcrystal_sprite, (self.position.x, self.position.y), layer=500))
+            KelvinSprite(self.huge_piercingcrystal_sprite, (self.position.x, self.position.y), group=RenderingGroup.UI))

@@ -5,7 +5,7 @@ import pygame
 
 from kelvin452.engine import *
 import kelvin452.game.enemy as enemy_module
-import kelvin452.game.__main__ as main
+import kelvin452.game.inventory as inventory
 
 
 class Powers:
@@ -81,7 +81,8 @@ class PowerupMenu(Entity, EventConsumer):
         self.place_element_centered(self.shop_text, 30)
 
         # Mis à jour plus tard
-        self.coins_pierced_upgrade = False
+        self.coins_pierced_upgrade = inventory.game.world.get_single_entity(inventory.Inventory).is_in_inventory(
+            inventory.PiercingCrystalEntity)
         self.coins_pierced_upgrade_text = self.background.govern(TextBlock())
         if self.coins_pierced_upgrade:
             self.coins_pierced_upgrade_buy_button: Button[TextBlock] = self.background.govern(
@@ -136,7 +137,7 @@ class PowerupMenu(Entity, EventConsumer):
             self.update_upgrade_button(self.coins_pierced_upgrade_buy_button, coins_pierced_cost)
         else:
             self.coins_pierced_upgrade_text.text = "LOCK"
-            self.place_element_centered(self.coins_pierced_upgrade_text, 0)
+            self.place_element_centered(self.coins_pierced_upgrade_text, 80)
 
         if self.fire_rate_upgrade:
             fire_rate_old, fire_rate_new, fire_rate_cost = self.powers.next_fire_rate_upgrade()
