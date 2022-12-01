@@ -23,7 +23,7 @@ class LifeText(Entity):
 
     def __init__(self, x=1161, y=28):
         super().__init__()
-        basic_life(10000000)
+        basic_life(1)
         self.position = Vector2(x, y)
         self.previous_life = 0
         self.survive_game_over = False

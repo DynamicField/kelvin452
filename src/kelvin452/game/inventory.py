@@ -2,7 +2,6 @@ import pygame
 
 from kelvin452.engine.fonts import default_font
 from kelvin452.engine import *
-import kelvin452.game.__main__ as main
 
 
 class Inventory(Entity, EventConsumer):

@@ -2,7 +2,7 @@ import pygame
 from kelvin452.engine.fonts import default_font
 from kelvin452.engine import *
 
-enemy = 100000000000
+enemy = 0
 max_enemies_on_screen = 100
 
 

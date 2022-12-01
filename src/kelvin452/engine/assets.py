@@ -36,3 +36,7 @@ def grounds(path: str) -> pygame.Surface:
 
 def ui(path: str) -> pygame.Surface:
     return load("ui", path)
+
+
+def dialogue(path: str) -> pygame.Surface:
+    return load("dialogue", path)

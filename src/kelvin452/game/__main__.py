@@ -14,6 +14,7 @@ import kelvin452.game.enemy as enemy_module
 import kelvin452.game.powers as powers
 import kelvin452.game.life as life
 import kelvin452.game.inventory as inventory
+import kelvin452.game.dialogue as dialogue
 from collections import namedtuple
 
 
@@ -268,9 +269,11 @@ class EldenWizardEntity(Entity):
         self.timer = self.shoot_cooldown
         self.phase = 1
         self.pv_max = 100 * self.lvl
-        self.pv = 1  # self.pv_max
+        self.pv = self.pv_max
         self.healing_cooldown = 1
         self.heal_timer = self.healing_cooldown
+        self.death_timer = 2
+        self.explosion_timer = 1
         self.position = Vector2(x, y)
         self.move_goal = self.position
         self.moving_direction = None  # if the Coin move in the x or y axe
@@ -390,62 +393,81 @@ class EldenWizardEntity(Entity):
 
     def _tick(self):
         if self.pv <= 0:
-            add_score(500)
 
-            if not inventory.game.world.get_single_entity(inventory.Inventory).is_in_inventory(
-                    inventory.PiercingCrystalEntity):
-                inventory.game.world.get_single_entity(inventory.Inventory).add_inventory(
-                    inventory.PiercingCrystalEntity)
-            level.add_level()
-            game.world.get_single_entity(CoinSpawner).paused = False
-            self.destroy()
+            self.position.x = 640 - self.width / 2
+            self.position.y = 360 - self.height / 2
 
-        if self.phase == 1:
-            self.timer -= game.delta_time
-            if self.timer <= 0:
-                self.shoot()
-            self.move()
+            if self.death_timer <= 0:
+                loot = None
+                self.__sprite.image = pygame.transform.scale(assets.sprite("explosion.png"),
+                                                             (38 * 3, 32 * 3))
+                self.__sprite.dirty = 1
+                if self.explosion_timer <= 0:
+                    if not inventory.game.world.get_single_entity(inventory.Inventory).is_in_inventory(
+                            inventory.PiercingCrystalEntity):
+                        loot = inventory.PiercingCrystalEntity(self.position.x + 38 * 3 / 2,
+                                                               self.position.y + 32 * 3 / 2)
+                        game.world.spawn_entity(loot)
+                        inventory.game.world.get_single_entity(inventory.Inventory).add_inventory(
+                            inventory.PiercingCrystalEntity)
+                        game.world.spawn_entity(EndDemo())
 
-        elif self.phase == 2:
-            self.timer -= game.delta_time
-            if self.timer <= 0:
-                self.shoot()
-            self.move()
-            self.moving_speed += self.moving_speed / 2 / 100 * game.delta_time
+                    else:
+                        level.add_level()
+                        game.world.get_single_entity(CoinSpawner).paused = False
 
-            if self.shield_cooldown <= 0:
-                if (self.wait_time <= 0) and (self.crystal_counter > 0):
-                    game.world.spawn_entity(EldenWizardCrystalShieldEntity(self.position.x, self.position.y, self))
-                    self.crystal_counter -= 1
-                    self.wait_time = (2 * math.pi / self.crystal_speed) / self.crystal_number
-                else:
-                    self.wait_time -= game.delta_time
+                    add_score(500)
+                    self.destroy()
+                self.explosion_timer -= game.delta_time
+            self.death_timer -= game.delta_time
 
-                if self.crystal_counter == 0:
-                    self.shield_cooldown = 5
-                    if self.crystal_number < 3 + 2 * self.lvl:
-                        self.crystal_number += 1
-                    self.crystal_counter = self.crystal_number
-                    self.shield = EldenWizardShieldEntity(self.position.x, self.position.y, self)
-                    game.world.spawn_entity(self.shield)
-            elif not self.crystal_verification():
-                game.world.destroy_entity(self.shield)
-                self.shield_cooldown -= game.delta_time
+        else:
+            if self.phase == 1:
+                self.timer -= game.delta_time
+                if self.timer <= 0:
+                    self.shoot()
+                self.move()
 
-        elif self.phase == 3:
-            if self.coin_spawner.knight_wall and game.world.get_entities(KnightCoinEntity):
-                if self.heal_timer <= 0:
-                    self.healing()
-                    self.heal_timer = self.healing_cooldown
-                self.heal_timer -= game.delta_time
+            elif self.phase == 2:
+                self.timer -= game.delta_time
+                if self.timer <= 0:
+                    self.shoot()
+                self.move()
+                self.moving_speed += self.moving_speed / 2 / 100 * game.delta_time
 
-        elif self.phase == 4:
-            self.timer -= game.delta_time
-            if self.timer <= 0:
-                self.shoot(random.randint(0, 1))
-            self.move()
-            self.moving_speed += self.moving_speed / 100 * game.delta_time
-            self.shoot_cooldown -= self.shoot_cooldown / 100 * game.delta_time
+                if self.shield_cooldown <= 0:
+                    if (self.wait_time <= 0) and (self.crystal_counter > 0):
+                        game.world.spawn_entity(EldenWizardCrystalShieldEntity(self.position.x, self.position.y, self))
+                        self.crystal_counter -= 1
+                        self.wait_time = (2 * math.pi / self.crystal_speed) / self.crystal_number
+                    else:
+                        self.wait_time -= game.delta_time
+
+                    if self.crystal_counter == 0:
+                        self.shield_cooldown = 5
+                        if self.crystal_number < 3 + 2 * self.lvl:
+                            self.crystal_number += 1
+                        self.crystal_counter = self.crystal_number
+                        self.shield = EldenWizardShieldEntity(self.position.x, self.position.y, self)
+                        game.world.spawn_entity(self.shield)
+                elif not self.crystal_verification():
+                    game.world.destroy_entity(self.shield)
+                    self.shield_cooldown -= game.delta_time
+
+            elif self.phase == 3:
+                if self.coin_spawner.knight_wall and game.world.get_entities(KnightCoinEntity):
+                    if self.heal_timer <= 0:
+                        self.healing()
+                        self.heal_timer = self.healing_cooldown
+                    self.heal_timer -= game.delta_time
+
+            elif self.phase == 4:
+                self.timer -= game.delta_time
+                if self.timer <= 0:
+                    self.shoot(random.randint(0, 1))
+                self.move()
+                self.moving_speed += self.moving_speed / 100 * game.delta_time
+                self.shoot_cooldown -= self.shoot_cooldown / 100 * game.delta_time
 
     def set_cooldown(self, value):
         self.shoot_cooldown = value
@@ -912,6 +934,46 @@ class JeanBoss(Entity, EventConsumer):
     def menu_destroyed(self):
         self.phase = 3
         self.flip_next_frame = True
+
+
+class EndDemo(Entity):
+    def __init__(self):
+        super().__init__()
+        self.i = 2
+        self.crystal_timer = 1
+        self.ending = False
+        self.click_allowed = 0.1
+
+    def _tick(self):
+
+        if self.crystal_timer <= 0 and not self.ending:
+            game.time_factor = 0
+            game.world.destroy_entity(game.world.get_single_entity(inventory.PiercingCrystalEntity))
+            self.height = 428
+            self.width = 700
+            self.position = Vector2(1280 // 2 - self.width // 2, 720 // 2 - self.height // 2)
+            self.huge_sprite = pygame.transform.scale(assets.dialogue("dialogue_1.png"), (self.width, self.height))
+            self.__sprite = self.attach_component(
+                (KelvinSprite(self.huge_sprite, (self.position.x, self.position.y), layer=500)))
+            self.ending = True
+
+        self.crystal_timer -= game.delta_time
+
+        if self.ending:
+            if ((pygame.mouse.get_pressed()[0]) or game.input.is_key_down(pygame.K_SPACE)) and self.click_allowed <= 0:
+                self.click_allowed = 0.1
+                if self.i == 4:
+                    game.time_factor = game.event.time_factor_backup
+                    game.world.get_single_entity(CoinSpawner).paused = False
+                    level.add_level()
+                    self.destroy()
+
+                else:
+                    self.__sprite.image = pygame.transform.scale(assets.dialogue(f"dialogue_{self.i}.png"),
+                                                                 (self.width, self.height))
+                    self.__sprite.dirty = 1
+                    self.i += 1
+            self.click_allowed -= 0.001
 
 
 def start_menu():
