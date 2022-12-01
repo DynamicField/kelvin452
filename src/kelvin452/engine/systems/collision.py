@@ -3,6 +3,8 @@ from typing import *
 
 import pygame.draw
 from pygame import Rect, Vector2
+from math import sqrt
+from math import fabs
 
 from kelvin452.engine.game import game
 from kelvin452.engine.systems.base import System, Component
@@ -31,18 +33,53 @@ class CollisionSystem(System):
     def refresh_hit_box(self, hit_box: 'CollisionHitBox'):
         self.__refreshed_hit_boxes.add(hit_box)
 
+    def distance_point_center_cheack(self, center, radius, rect):
+        dic = {
+            'a': (rect.x, rect.y),
+            'b': (rect.x + rect.width, rect.y),
+            'c': (rect.x, rect.y + rect.height),
+            'd': (rect.x + rect.width, rect.y + rect.height)
+        }
+        for i in dic:
+            if sqrt((center.x - dic[i][0]) ** 2 + (center.y - dic[i][1]) ** 2) <= radius:
+                return True
+        return False
+
     def refresh_collisions(self):
         self.__refreshing_collisions = True
 
         # Bruteforce, faudrait optimiser ça avec des quadtrees.
-        for hit_box in self.__refreshed_hit_boxes:
-            for other_hit_box in self.__all_hitboxes:
+        for hit_box in self.__refreshed_hit_boxes.copy():
+            for other_hit_box in self.__all_hitboxes.copy():
                 if hit_box.is_destroyed or other_hit_box.is_destroyed or hit_box == other_hit_box:
                     continue
-                if hit_box.rect.colliderect(other_hit_box.rect):
-                    self.on_collide(hit_box, other_hit_box)
-                elif len(hit_box.ongoing_collisions) > 0:
-                    self.clear_ongoing_collisions(hit_box, other_hit_box)
+                if hit_box.type == 1:
+                    if other_hit_box.type == 1:
+                        if hit_box.rect.colliderect(other_hit_box.rect):
+                            self.on_collide(hit_box, other_hit_box)
+                        elif len(hit_box.ongoing_collisions) > 0:
+                            self.clear_ongoing_collisions(hit_box, other_hit_box)
+                    elif other_hit_box.type == 2:
+                        if self.distance_point_center_cheack(other_hit_box.attached_entity.center_position,
+                                                             other_hit_box.circle, hit_box.rect):
+                            self.on_collide(hit_box, other_hit_box)
+                        elif len(hit_box.ongoing_collisions) > 0:
+                            self.clear_ongoing_collisions(hit_box, other_hit_box)
+                elif hit_box.type == 2:
+                    if other_hit_box.type == 1:
+                        if self.distance_point_center_cheack(hit_box.attached_entity.center_position, hit_box.circle,
+                                                             other_hit_box.rect):
+                            self.on_collide(hit_box, other_hit_box)
+                        elif len(hit_box.ongoing_collisions) > 0:
+                            self.clear_ongoing_collisions(hit_box, other_hit_box)
+                    elif other_hit_box.type == 2:
+                        dx = hit_box.attached_entity.center_position.x - other_hit_box.attached_entity.position.x / 2
+                        dy = hit_box.attached_entity.center_position.y - other_hit_box.attached_entity.position.y / 2
+                        distance = sqrt(dx ** 2 + dy ** 2)
+                        if distance < hit_box.circle + other_hit_box.circle:
+                            self.on_collide(hit_box, other_hit_box)
+                        elif len(hit_box.ongoing_collisions) > 0:
+                            self.clear_ongoing_collisions(hit_box, other_hit_box)
 
         self.__refreshed_hit_boxes.clear()
         # On retire toutes les hitbox après pour éviter des conflits
@@ -85,22 +122,25 @@ class CollisionHitBox(EntityComponent):
 
     __slots__ = ("__follow_sprite_rect", "__rect", "__rect_set", "ongoing_collisions", "draw_box", "margin")
 
-    def __init__(self, follow_sprite_rect: bool, draw_box=False, margin: Vector2 = Vector2(0, 0)):
+    def __init__(self, follow_sprite_rect: bool, draw_box=False, offset: pygame.Rect = pygame.Rect(0, 0, 0, 0),
+                 type=1, radius=1):
         """
         Crée une nouvelle hit box, ne pas oublier d'attacher le composant avec
         ``self.attach_component(...)`` !!
 
         :param follow_sprite_rect: Si la hit box doit être la même que celle du sprite.
         :param draw_box: Si une boite rouge doit être dessinée pour représenter la hitbox (debug).
-        :param margin: La marge de taille du sprite (largeur, hauteur)
+        :param offset: La marge de la hit box
         """
         super().__init__()
         self.__follow_sprite_rect = follow_sprite_rect
         self.__rect = Rect(0, 0, 0, 0)
         self.__rect_set = False
+        self.circle = radius
+        self.type = type  # type of the hitbox, 1 -> rect, 2 -> circle
         self.ongoing_collisions: Set['CollisionHitBox'] = set()
         self.draw_box = draw_box
-        self.margin = margin
+        self.offset = offset
 
     @property
     def rect(self) -> Rect:
@@ -114,8 +154,11 @@ class CollisionHitBox(EntityComponent):
     def _entity_tick(self, entity: Entity):
         if self.__follow_sprite_rect and not self.__rect_set:
             sprite = entity.get_component(KelvinSprite)
-            if sprite is not None and sprite.rect != self.rect:
-                self.rect = sprite.rect.inflate(*self.margin)
+            if sprite is not None:
+                adjusted_rect = sprite.rect.move(self.offset.x, self.offset.y)
+                adjusted_rect.width = self.offset.width
+                adjusted_rect.height = self.offset.height
+                self.rect = adjusted_rect
         if self.__rect_set:
             game.collision.refresh_hit_box(self)
             self.__rect_set = False
@@ -142,7 +185,12 @@ class CollisionHitBox(EntityComponent):
         # Rouge = normal
         # Violet = collision
         color = (255, 0, 0) if len(self.ongoing_collisions) == 0 else (128, 0, 128)
-        pygame.draw.rect(pygame.display.get_surface(), color, self.rect, 2)
+        if self.type == 1:
+            pygame.draw.rect(pygame.display.get_surface(), color, self.rect, 2)
+        if self.type == 2:
+            pygame.draw.circle(pygame.display.get_surface(), color,
+                               (self.attached_entity.center_position.x, self.attached_entity.center_position.y),
+                               self.circle, 2)
 
 
 class CollisionListener(Component):

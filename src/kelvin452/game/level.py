@@ -26,6 +26,7 @@ class LevelText(Entity):
 
     def _tick(self):
         if self.previous_level != level:
+            print(level)
             self.text_sprite.image = default_font.render(f"LEVEL : {level}",
                                                          True,
                                                          (255, 255, 255))
