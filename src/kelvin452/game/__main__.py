@@ -1045,7 +1045,7 @@ def game_start():
 def launch_game():
     game.initialize_game()
     game.on_start(start_menu)
-    game.log_fps = True
+    game.log_fps = False
     game.start()
 
 

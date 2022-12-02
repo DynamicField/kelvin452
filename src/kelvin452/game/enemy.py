@@ -7,7 +7,9 @@ max_enemies_on_screen = 100
 
 
 def basic_enemy(value):
-    modify_enemy(value - enemy)
+    global enemy
+    enemy -= value
+    print(enemy)
 
 
 def modify_enemy(amount):
